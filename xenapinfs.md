@@ -1,8 +1,8 @@
 ## Introduction
 
 This blog entry shows how to use an NFS server to store OpenStack volumes. The
-cinder part of this feature, is called XenAPINFS. This feature's [blueprint
-could be found on launchpad](https://blueprints.launchpad.net/cinder/+spec/xenapinfs-glance-integration).
+cinder part of this feature is called XenAPINFS. This feature's blueprint
+[can be found on launchpad](https://blueprints.launchpad.net/cinder/+spec/xenapinfs-glance-integration).
 At the time of writing this document, the driver only supports XenServer type
 `ovf` images (these images are specially named `vhd` files compressed to a `.tgz`
 archive). The cinder driver is using the nova xenapi plugins to upload/download
@@ -28,7 +28,7 @@ specified for the export:
 
 ### XenServer with OpenStack
 For the demo [Devstack](https://github.com/openstack-dev/devstack) was used to
-install a development OpenStack on a XenServer 6.1. For the demo, only one
+install a development OpenStack on XenServer 6.1. For the demo, only one
 XenServer was used, however, it is possible to use a totally different 
 XenServer for cinder operations. The only requirement is, that __Nova plugins must be installed on the
 XenServer used for volume operations__ (the one specified in `cinder.conf`).
@@ -112,7 +112,8 @@ And create a new instance with that volume as its primary hard disk:
     stack@DevStackOSDomU:~$ nova boot --flavor=m1.small --block_device_mapping vda=<volume id>:::0 demo_vm
 
 Use horizon to access the console of the new VM, and log in using the usual
-cirros credentials, and touch a file in the home directory.
+cirros credentials, and touch a file in the home directory to demonstrate
+that changes to the volume are stored in the image.
 
     $ touch HEREIAM
     $ sync
@@ -129,7 +130,7 @@ Check the status of the image, by:
 
     stack@DevStackOSDomU:~$ glance image-show demoimage_b
 
-And wait until it is `active`
+And wait until it is `active`.
 
 ## Step 6. - Launch an Instance from the Uploaded Image
 First, get the id of the newly created image:
