@@ -111,8 +111,8 @@ And create a new instance with that volume as its primary hard disk:
     stack@DevStackOSDomU:~$ nova boot --flavor=m1.small --block_device_mapping vda=<volume id>:::0 demo_vm
 
 Use horizon to access the console of the new VM, and log in using the usual
-cirros credentials, and touch a file in the home directory to demonstrate
-that changes to the volume are stored in the image.
+cirros credentials, and touch a file in the home directory. We expect to see
+these changes in the created image later.
 
     $ touch HEREIAM
     $ sync
