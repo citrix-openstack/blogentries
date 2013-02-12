@@ -1,6 +1,6 @@
 ## Introduction
 
-This blog entry shows how XenAPINFS is integrated with Glance. This feature's blueprint
+This blog entry demonstrates the XenAPINFS - Glance integration. The feature's blueprint
 [can be found on launchpad](https://blueprints.launchpad.net/cinder/+spec/xenapinfs-glance-integration).
 At the time of writing this document, the driver only supports XenServer type
 `ovf` images (these images are specially named `vhd` files compressed to a `.tgz`
