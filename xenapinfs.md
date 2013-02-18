@@ -6,7 +6,9 @@ At the time of writing this document, the driver only supports XenServer type
 `ovf` images (these images are specially named `vhd` files compressed to a `.tgz`
 archive). The cinder driver is using the nova xenapi plugins to upload/download
 the images. I am also working on a general case, to be able to create volumes
-from images with arbitrary format (such as qcow or raw).
+from images with arbitrary format (such as qcow or raw). Should you wish to
+try out XenAPINFS, make sure that the fix for [this bug](https://bugs.launchpad.net/cinder/+bug/1129056)
+already hit trunk, or cherry-pick the patch.
 
 In this demo, I will:
 
