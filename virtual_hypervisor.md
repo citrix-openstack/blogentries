@@ -18,10 +18,11 @@ the following command on the physical hypervisor:
 
 This will be a separated network. I also set up an Ubuntu VM with two network
 interfaces: one plugged to the corporate network, one to the newly created
-`home` network. This VM has shorewall installed and configured, so that it will
-act as a default gateway, and as a DNS proxy for the `home` network. I will call
-this machine `toolbox` throughout this documentation. The network address for
-`toolbox` is `192.168.32.1`, so the home network's IP configuration is:
+`home` network. This VM has shorewall and dnsmasq installed and configured, so
+that it will act as a default gateway, and as a DNS proxy for the `home`
+network. I will call this machine `toolbox` throughout this documentation. The
+network address for `toolbox` is `192.168.32.1`, so the home network's IP
+configuration is:
 
     192.168.32.0/255.255.255.0
 
@@ -69,11 +70,12 @@ installation is finished.
 
 ### Create a Remastered ISO
 The next step, is to inject the created answer file together with the
-post-installation and first-boot scripts to a single iso file:
+post-installation and first-boot scripts to a remastered, custom XenServer iso
+file:
 
     scripts/create_customxs_iso.sh xenserver.iso vh0.lab.iso vh0.answers
 
-The following output will appear on the screen:
+The following output should appear on the screen:
 
     Extracting xenserver.iso to /tmp/tmp.RG8qRasycH
     Remastering /tmp/tmp.RG8qRasycH/install.img
