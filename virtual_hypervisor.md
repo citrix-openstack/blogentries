@@ -41,6 +41,10 @@ scripted install.
 
     git clone https://github.com/matelakat/virtual-hypervisor.git
     cd virtual-hypervisor/
+    git checkout v1.0
+
+Please note, that the `v1.0` branch is used during this demo, to avoid the effect
+of further changes in master.
 
 After this step, download the XenServer iso image as `xenserver.iso`.
 
@@ -115,6 +119,14 @@ You can start the Virtual Hypervisor by logging in to the physical one, and
 issuing:
 
     xe vm-start vm=vh0.lab
+
+### Log in
+After you started the virtual hypervisor, use:
+
+    ssh root@192.168.32.2
+
+to log in. The password is `vhpass`, as specified during the answer file
+generation step.
 
 ### Look at the Console
 To get a console for the Virtual Hypervisor, first you have to find out the
