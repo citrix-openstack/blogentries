@@ -1,6 +1,6 @@
 # Virtual Hypervisor
-This blog demonstrates how to install a XenServer inside a XenServer. This
-could be useful for experimenting with cloud setups.
+This blog demonstrates how to perform a scripted install of a XenServer inside
+a XenServer. This could be useful for experimenting with cloud setups.
 
 ## Network setup
 The physical XenServer host's `eth0` interface is connected to the corporate
