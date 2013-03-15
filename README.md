@@ -3,6 +3,7 @@ blogentries
 A repository for blogs:
 
 - [XenAPINFS](./xenapinfs.md)
+- [Virtual Hypervisor](./virtual_hypervisor.md)
 
 tools
 =====
