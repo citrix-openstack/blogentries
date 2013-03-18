@@ -3,6 +3,12 @@ This blog demonstrates how to perform a scripted install of a XenServer inside
 a XenServer. This gives a flexibile virtual environment for development or 
 experimenting with cloud setups.
 
+The official way of automating XenServer installation, is to use 
+[PXE boot](http://docs.vmd.citrix.com/XenServer/6.1.0/1.0/en_gb/installation.html#pxe_boot_install).
+
+This guide assumes that you don't have DHCP/PXE services running on your
+network.
+
 ## Network setup
 In this example, the physical XenServer host's `eth0` interface is connected to the corporate
 network, which is providing DNS and DHCP services. The corporate network is:
@@ -139,3 +145,8 @@ Subtract `5900` from the result, and use that with `vncviewer` from your
 workstation (In this example, the result was 5902):
 
     vncviewer -via root@10.219.10.25 localhost:2
+
+## Where to go now?
+You can now set up your OpenStack test setups in a fully virtualised
+environment, decoupled from all the corporate networking services, properly
+isolated.
