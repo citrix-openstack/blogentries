@@ -15,19 +15,19 @@ In order to separate the virtual hypervisor from these networks, and emulate a
 network environment without DHCP, a new network has been created by issuing
 the following command on the physical hypervisor:
 
-    xe network-create name-label=home
+    xe network-create name-label=isolated
 
 This will be a separated network. I also set up an Ubuntu VM with two network
 interfaces: one plugged to the corporate network, one to the newly created
-`home` network. This VM has shorewall and dnsmasq installed and configured, so
-that it will act as a default gateway, and as a DNS proxy for the `home`
+`isolated` network. This VM has shorewall and dnsmasq installed and configured, so
+that it will act as a default gateway, and as a DNS proxy for the `isolated`
 network. I will call this machine `toolbox` throughout this documentation. The
-network address for `toolbox` is `192.168.32.1`, so the home network's IP
+network address for `toolbox` is `192.168.32.1`, so the isolated network's IP
 configuration is:
 
     192.168.32.0/255.255.255.0
 
-I will install the Virtual Hypervisor, connected to the `home` network,  with a
+I will install the Virtual Hypervisor, connected to the `isolated` network,  with a
 static IP configuration:
 
        address: 192.168.32.2
@@ -92,7 +92,7 @@ The following output should appear on the screen:
 The next step is to install an HVM virtual machine with the remastered ISO.
 This could be done by executing:
 
-    scripts/xs_start_create_vm_with_cdrom.sh vh0.lab.iso 10.219.10.25 home vh0.lab
+    scripts/xs_start_create_vm_with_cdrom.sh vh0.lab.iso 10.219.10.25 isolated vh0.lab
 
 This script will ask for the physical hypervisor's password, copy the iso file
 to the hypervisor, and block, until the installation is finished. You can use
