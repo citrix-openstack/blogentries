@@ -8,7 +8,7 @@ The official way of automating XenServer installation, is to use
 
 This guide assumes that you don't have DHCP/PXE services running on your
 isolated network, so it will re-master the XenServer install media, thus, the
-only dependency is to being able to boot from an iso file.
+only dependency is to be able to boot from an iso file.
 
 ## Network setup
 In this example, the physical XenServer host's `eth0` interface is connected to the corporate
