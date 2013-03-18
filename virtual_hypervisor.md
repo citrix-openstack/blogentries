@@ -1,9 +1,10 @@
 # Virtual Hypervisor
 This blog demonstrates how to perform a scripted install of a XenServer inside
-a XenServer. This could be useful for experimenting with cloud setups.
+a XenServer. This gives a flexibile virtual environment for development or 
+experimenting with cloud setups.
 
 ## Network setup
-The physical XenServer host's `eth0` interface is connected to the corporate
+In this example, the physical XenServer host's `eth0` interface is connected to the corporate
 network, which is providing DNS and DHCP services. The corporate network is:
 
     10.219.0.0/255.255.192.0
@@ -43,7 +44,7 @@ scripted install.
     cd virtual-hypervisor/
     git checkout v1.0
 
-Please note, that the `v1.0` branch is used during this demo, to avoid the effect
+Please note, that the `v1.0` branch is used during this guide, to avoid the effect
 of further changes in master.
 
 After this step, download the XenServer iso image as `xenserver.iso`.
@@ -108,7 +109,7 @@ As the script finished, you should end up having a Virtual Hypervisor:
 
     xe vm-list
 
-Should  contain something like:
+Should contain something like:
 
     uuid ( RO)           : 423bfa08-fc29-c783-21cc-9970b8d0676f
          name-label ( RW): vh0.lab
