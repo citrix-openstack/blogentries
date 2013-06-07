@@ -16,21 +16,22 @@ not make the Grizzly release. We decided to put much more effort to get
 OpenStack Networking working with XenServer.
 
 As I had no previous experiences with Quantum, I started to read the wiki,
-watch the videos, get some basic understanding, and right after that, I started
+watch the videos to get some basic understanding. Right after that, I started
 to test the patches provided by Maru.
 
 I was using devstack to setup the environment. Several changes had to be made
 in order to make it easier to test Quantum. Devstack was modified so that it
 does not connect the host networks to any physical interfaces, and we also got
 rid of the VLAN tagging mess. There are a lot more to do to make getting
-started with devstack on XenServer easier, and less fragile.  [A blueprint was
-created to record our
+started with devstack on XenServer easier.  [A blueprint was created to record
+our
 efforts.](https://blueprints.launchpad.net/devstack/+spec/xenapi-devstack-cleanup)
 
 ## Single Box Installation Using Devstack
-I do not want to replicate the [wiki page, which describes how to install an
-all-in one OpenStack developer
-instance](https://wiki.openstack.org/wiki/QuantumDevstackOvsXcp). I would like
+
+I do not want to duplicate the [wiki page, which describes how to install an
+all-in one OpenStack developer instance with
+Quantum](https://wiki.openstack.org/wiki/QuantumDevstackOvsXcp). I would like
 to show what the environment looks like.
 
 ### Deployment Architecture
@@ -38,11 +39,11 @@ to show what the environment looks like.
 is doing. The most significant difference, is that you will have two L2 agents:
 
  - `q-domua` managing the OpenvSwitch in domU, providing connectivity for dhcp
-   and routing components to the "physnet1" network.
+   and routing components to the `physnet1` network.
  - `q-agt` managing the OpenvSwitch in dom0, connecting tenant interfaces to
-   the "physnet1" network.
+   the `physnet1` network.
 
-You might ask, what is "physnet1". That network represents the datacenter
+You might ask, what is `physnet1`. That network represents the datacenter
 network, this network is accessible on the hypervisor, as "OpenStack VM
 Network". It is not connected to any physical interfaces, so don't be confused
 by its name.
@@ -55,7 +56,7 @@ Will display two networks: `public` and `private`. Using
 
     $ quantum net-show <network uuid comes here>
 
-will show the details of those networks. Look at the `privat` network: the
+will show the details of those networks. Look at the `private` network: the
 `provider:network_type` is `vlan` and `provider:physical_network` is
 `physnet1`. You can also see what VLAN id is used.  In my case, `private` is
 using VLAN 1000. These numbers are coming from the `localrc` file, see the
@@ -68,7 +69,7 @@ The OpenvSwitch configuration could be displayed by:
 
 Look at the integration bridge, and notice the interfaces for the dhcp server
 (`qdhcp-`) and the router (`qrouter-`). Also note, that the integration
-bridge has an "uplink" port to the `physnet1` bridge - `int-br-eth1`.
+bridge has an `uplink` port to the `physnet1` bridge - `int-br-eth1`.
 
 Now, switch to the dom0, and look at the network configuration:
 
