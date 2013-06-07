@@ -10,14 +10,14 @@ OpenStack Networking.
 ## Initial Work
 We were just after the Havana summit. All the patches that enabled the use of
 Quantum with XenServer were waiting to be approved. All the work was done by
-Maru, the initial patch was proposed on the end of 2012. [You can look at the
-patch here](https://review.openstack.org/15022). Unfortunately, the patch did
-not make the Grizzly release. We decided to put much more effort to get
+Maru Newby, the initial patch was proposed on the end of 2012. [You can look at
+the patch here](https://review.openstack.org/15022). Unfortunately, the patch
+did not make the Grizzly release. We decided to put much more effort to get
 OpenStack Networking working with XenServer.
 
 As I had no previous experiences with Quantum, I started to read the wiki,
 watch the videos to get some basic understanding. Right after that, I started
-to test the patches provided by Maru.
+to test the patches provided by Maru Newby.
 
 I was using devstack to setup the environment. Several changes had to be made
 in order to make it easier to test Quantum. Devstack was modified so that it
@@ -46,9 +46,9 @@ is doing. The most significant difference, is that you will have two L2 agents:
 You might ask, what is `physnet1`. That network represents the datacenter
 network, this network is accessible on the hypervisor, as "OpenStack VM
 Network". It is not connected to any physical interfaces, so don't be confused
-by its name.
+by the `phys`.
 
-Let's look at the installation, by issueing some quantum commands.
+Let's look at the configuration, by issueing some quantum commands.
 
     $ quantum net-list
 
@@ -108,3 +108,14 @@ And in my case the `private` network is tagged with VLAN id 1 on the domU
 So we expect that the port of the dhcp server and the router is tagged with
 VLAN 1. Execute `sudo ovs-vsctl show`, and look for the `tag:` lines to verify
 this.
+
+### Next Steps
+
+I was intentionally not covering the `public` network. This network is
+supposed to be the external network. If you look at its configuration, you
+will find, that it is mapped to `physnet1` as well, but if you are looking
+for the flows, with `sudo ovs-ofctl dump-flows br-ex`, you will not find
+the traces of the VLAN id. You will need to start another agent to manage
+your `br-ex` bridge.
+
+To be continued...
