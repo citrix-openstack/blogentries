@@ -5,22 +5,23 @@ flexibility to the cloud users than its predecessor, Nova network. If you are
 interested in the details, look at the [wiki page of the
 project](https://wiki.openstack.org/wiki/Quantum). I highly recommend the
 videos, as they were very useful for me during my journey to the world of
-OpenStack Networking.
+OpenStack Networking.  The introductory details will also explain some of the 
+concepts mentioned in this blog post - such as l2 agents.
 
 ## Initial Work
-We were just after the Havana summit. All the patches that enabled the use of
+Just after the Havana summit, all the patches that enabled the use of
 Quantum with XenServer were waiting to be approved. All the work was done by
-Maru Newby, the initial patch was proposed on the end of 2012. [You can look at
+Maru Newby, with the initial patch proposed on the end of 2012. [You can look at
 the patch here](https://review.openstack.org/15022). Unfortunately, the patch
-did not make the Grizzly release. We decided to put much more effort to get
+did not make the Grizzly release and we decided to put much more effort to get
 OpenStack Networking working with XenServer.
 
 As I had no previous experiences with Quantum, I started to read the wiki,
 watch the videos to get some basic understanding. Right after that, I started
 to test the patches provided by Maru Newby.
 
-I was using devstack to setup the environment. Several changes had to be made
-in order to make it easier to test Quantum. Devstack was modified so that it
+I was using devstack to setup the environment as several changes had to be made
+in order to make it easier to test Quantum. Devstack was then modified so that it
 does not connect the host networks to any physical interfaces, and we also got
 rid of the VLAN tagging mess. There are a lot more to do to make getting
 started with devstack on XenServer easier.  [A blueprint was created to record
