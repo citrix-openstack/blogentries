@@ -1,4 +1,4 @@
-# OpenStack Networking ("Quantum") on XenServer - from Notworking to Networking
+# OpenStack Networking (Quantum) on XenServer - from Notworking to Networking
 
 Quantum, OpenStack Networking is getting more important, as it gives much more
 flexibility to the cloud users than its predecessor, Nova network. If you are
