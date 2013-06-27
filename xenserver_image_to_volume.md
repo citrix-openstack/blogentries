@@ -5,7 +5,7 @@ raw volume.
 
 In tempest test suite, there are some test cases around creating a volume from
 an image. On the Cinder side this basically means to get the image, ask
-`qemu-img` to recogise its format, and to convert it to raw, and write the
+`qemu-img` to recognise its format, and to convert it to raw, and write the
 raw bytes to the volume.
 
 With XenServer, this works out of the box with raw images, but if you are using
