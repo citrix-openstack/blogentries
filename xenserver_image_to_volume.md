@@ -5,18 +5,20 @@ raw volume.
 
 In tempest test suite, there are some test cases around creating a volume from
 an image. On the Cinder side this basically means to get the image, ask
-`qemu-img` to recogise its format, and to convert it as raw to a volume.
+`qemu-img` to recogise its format, and to convert it to raw, and write the
+raw bytes to the volume.
 
 With XenServer, this works out of the box with raw images, but if you are using
-XenServer type images, you will get unexpected results. Basically the image
-file will be written to the volume, without any conversion, because `qemu-img`
-recognise the targz file as `raw`.
+XenServer type images, you will get unexpected results, when you expect to see
+the bytes of your image on the volume. Basically the image file will be written
+to the volume, without any conversion, because `qemu-img` recognise the targz
+file as `raw`.
 
 `dd` -ing a targz of vhd chains to a disk is hardly usable.
 
 We decided to eliminate this gap, and implement XenServer image to volume
 functionality. Having this feature will enable us to run boot from volume
-exercises as well.
+exercise as well.
 
 ## About XenServer Images
 
@@ -24,7 +26,7 @@ As a first thing, let's get familiar with XenServer type images in OpenStack.
 If you are using XenServer with OpenStack, the images used are vhd chains
 inside a targz archive file. You might wonder why the chain is needed, but it
 will be clear in a second, once we get to snapshots. For now, let's say that
-there could be more than one `vhd` forming a chain.
+there could be more than one `vhd` inside the targz, forming a chain.
 
 The above mentioned format could be best learned by looking at the XenAPI
 plugins.  [Those plugins live in nova at the moment](https://github.com/openstack/nova/blob/master/plugins/xenserver/xenapi/etc/xapi.d/plugins/utils.py#L272).
@@ -39,6 +41,8 @@ naming convention of those files are:
 
 And they form a chain, `0.vhd` being the latest difference, and `n.vhd` being
 the base image.
+
+## Converting a XenServer Image to raw
 
 To start with something, let's create a simple cirros image for start. This
 should be a `tgz` containing one base image, `0.vhd`. See [this blog
