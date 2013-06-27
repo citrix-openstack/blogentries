@@ -3,16 +3,18 @@
 In tempest test, there is a test case around creating a volume from an image.
 This basically means to get the raw bytes from an image, and write them to the
 volume. With XenServer, this works out of the box, but if you are using
-XenServer type images, this operation will fail. I decided to eliminate this
-gap, and implement XenServer image to volume functionality.
+XenServer type images, you will get unexpected results. Basically the image
+file will be written to the volume. We decided to eliminate this gap, and
+implement XenServer image to volume functionality. Having this feature will
+enable us to run boot from volume exercises as well.
 
 ## About XenServer Images
 
 As a first thing, let's get familiar with XenServer type images in OpenStack.
 If you are using XenServer with OpenStack, the images used are vhd chains
 inside a targz archive file. You might wonder why the chain is needed, but it
-will be clear in a second, once you look under the hood. For now, let's say
-that there could more than one `vhd` forming a chain.
+will be clear in a second, once we get to snapshots. For now, let's say that
+there could be more than one `vhd` forming a chain.
 
 The above mentioned format could be best learned by looking at the XenAPI
 plugins.  [Those plugins live in nova at the moment](https://github.com/openstack/nova/blob/master/plugins/xenserver/xenapi/etc/xapi.d/plugins/utils.py#L272).
@@ -34,8 +36,9 @@ entry](http://blogs.citrix.com/2012/10/17/upload-custom-images-to-a-xenserver-po
 on how to accomplish this. If you don't want to spend time with creating the
 initial image, feel free to download it from
 [here](https://github.com/downloads/citrix-openstack/warehouse/cirros-0.3.0-x86_64-disk.vhd.tgz).
-If you are using devstack to install your OpenStack, you could specify the above
-url in your localrc file, and your initial stack will be populated with the image:
+If you are using devstack to install your OpenStack, you could specify the
+above url in your localrc file, and your initial stack will be populated with
+the image:
 
     IMAGE_URLS="https://github.com/downloads/citrix-openstack/warehouse/cirros-0.3.0-x86_64-disk.vhd.tgz"
     DEFAULT_IMAGE_NAME="cirros-0.3.0-x86_64-disk"
@@ -207,8 +210,9 @@ And convert the coalesced base image:
             Device Boot      Start         End      Blocks   Id  System
     coalesced.raw1   *       16065     2088449     1036192+  83  Linux
 
-Looks better, although the size does not look good. I would expect it to be a 1GiG volume. In order to fix this issue,
-I will include a resize step as well, so that my conversion looks like this:
+Looks better, although the size does not look good. I would expect it to be a
+1G disk. In order to fix this issue, I will include a resize step as well, so
+that my conversion looks like this:
 
     $ mkdir snap && tar -xzf snap.tgz -C snap
     $ vhd-util modify -n snap/0.vhd -p snap/1.vhd
