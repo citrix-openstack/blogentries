@@ -293,3 +293,6 @@ And check the checksum:
     $ ssh cirros@10.0.0.3 sudo md5sum -c somefile.md5
     cirros@10.0.0.3's password: 
     somefile: OK
+
+This clearly illustrates, that I was able to create a volume from a XenServer
+type OpenStack image.
