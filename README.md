@@ -15,6 +15,6 @@ To convert an entry to html:
 
 Preformatted blocks with black background:
 
-    cat quantum_on_xenserver.md | python remove_newlines.py | markdown_py | sed -e 's/<pre/<pre style="background-color: #F8F8F8;border: 1px solid #DDDDDD;border-radius: 3px 3px 3px 3px;font-size: 13px;line-height: 19px;overflow: auto;padding: 6px 10px;"/g' | xclip
+    cat quantum_on_xenserver.md | python remove_newlines.py | markdown_py | sed -e 's/<pre/<pre style="font-family: monospace; background-color: #F8F8F8;border: 1px solid #DDDDDD;border-radius: 3px 3px 3px 3px;font-size: 13px;line-height: 19px;overflow: auto;padding: 6px 10px;"/g' | xclip
 
 After this, it could be inserted to wordpress.
