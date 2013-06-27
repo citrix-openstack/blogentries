@@ -260,7 +260,7 @@ disk with some userspace tools.
 
 ## Cinder
 
-The cinder patch, that adds these changes to cinder, could be found (here)[https://review.openstack.org/34336]
+The cinder patch, that adds these changes to cinder, could be found [here](https://review.openstack.org/34336)
 here, so if you have any questions or suggestion on it, please comment
 on it.
 
