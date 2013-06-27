@@ -1,12 +1,22 @@
 # Create Volume from a XenServer Image
 
-In tempest test, there is a test case around creating a volume from an image.
-This basically means to get the raw bytes from an image, and write them to the
-volume. With XenServer, this works out of the box, but if you are using
+A story of supporting XenServer Images in cinder - converting a vhd chain to a
+raw volume.
+
+In tempest test suite, there are some test cases around creating a volume from
+an image. On the Cinder side this basically means to get the image, ask
+`qemu-img` to recogise its format, and to convert it as raw to a volume.
+
+With XenServer, this works out of the box with raw images, but if you are using
 XenServer type images, you will get unexpected results. Basically the image
-file will be written to the volume. We decided to eliminate this gap, and
-implement XenServer image to volume functionality. Having this feature will
-enable us to run boot from volume exercises as well.
+file will be written to the volume, without any conversion, because `qemu-img`
+recognise the targz file as `raw`.
+
+`dd` -ing a targz of vhd chains to a disk is hardly usable.
+
+We decided to eliminate this gap, and implement XenServer image to volume
+functionality. Having this feature will enable us to run boot from volume
+exercises as well.
 
 ## About XenServer Images
 
