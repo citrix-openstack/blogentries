@@ -106,7 +106,7 @@ If you don't use XenCenter, log in to XenServer and type:
 
     xe vm-start vm=DevStackOSDomU 
 
-At this point, DevStack VM is started, and 'stack.sh' is running inside. As
+At this point, DevStack VM is started, and `stack.sh` is running inside. As
 the XenServer's password is required for OpenStack to communicate with the
 hypervisor, we need to take a look at the console of the VM. I like to do it
 from the console, so first I need the domain id of the VM:
