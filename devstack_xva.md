@@ -12,25 +12,29 @@ DevStack, as a tested XVA Virtual Appliance is built on a daily basis.
 In this blog, I will guide you through the steps on how to get the mentioned
 XVA up and running on XenServer installation.
 
-The process consists of 3 steps:
+The process consists of 2 steps:
  - Install the appliance and the supplemental pack
  - Start the appliance
- - Configure the appliance
 
 # Prerequisites
 
 ## XenServer
 
-I assume a XenServer 6.2 installation with ext type storage. To check if your
-installation is using ext type storage, use the following command:
+I assume a XenServer 6.2 installation with ext type storage. As XenServer is
+now fully opensource, it could be downloaded from
+[xenserver.org](http://xenserver.org/). During installation, make sure, you
+enable thin provisioning, so that your XenServer will use ext type storage. To
+check if your installation is using ext type storage, use the following
+command:
 
-    [root@jaglan ~]# xe sr-list name-label="Local storage" params=type --minimal
+    xe sr-list name-label="Local storage" params=type --minimal
 
 The command should return `ext`. If it does not return ext, but other, you will
 need to change your SR type to ext.
 
 It is also recommended to have at least 6 gigabytes of memory in that physical
-machine.
+machine. 1 gigabyte is required for Dom0, 3 gigabytes are required for the
+DevStack VM, and the rest could be used to launch OpenStack VMs.
 
 ## Networking
 
@@ -44,18 +48,18 @@ The DevStack XVA consists of two components:
  - A Supplemental Pack - containing XenServer modifications
  - The appliance itself
 
-We build these in pairs, and it is important to install a matching pair. Navigat
+We build these in pairs, and it is important to install a matching pair. Navigate
 to the following location with your browser:
 
     http://downloads.vmd.citrix.com/OpenStack/
 
-As an example, I will pick 10-15-2013 (it is the latest as of writing this
+As an example, I will pick `10-15-2013` (it is the latest as of writing this
 blog post). In this case it means, that the plugin Supplemental Pack is located
 at:
     
     http://downloads.vmd.citrix.com/OpenStack/novaplugins-10_15_2013.iso
     
-, and the XVA is located at:
+and the XVA is located at:
 
     http://downloads.vmd.citrix.com/OpenStack/devstack-10_15_2013.xva
 
@@ -94,9 +98,11 @@ launch.
 
 # Step 2: Start the appliance
 
-If you are using XenCenter, just start the DevStackOSDomU VM.
+If you are using XenCenter, just start the DevStackOSDomU VM, look at its
+console, and enter your XenServer's password when prompted. As `stack.sh` is
+completed, press Enter to display the login parameters.
 
-To start the DevStack virtual machine from the console, type:
+If you don't use XenCenter, log in to XenServer and type:
 
     xe vm-start vm=DevStackOSDomU 
 
