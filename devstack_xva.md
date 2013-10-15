@@ -2,11 +2,11 @@
 
 The easiest way to get started with OpenStack development is to use DevStack.
 DevStack is a collection of shell scripts that help to set up an OpenStack
-installation. This installation should not be used in production, it serves as
-an environment to hack OpenStack - as hackability is important in OpenStack -
-and DevStack could even be useful, if you want to experiment with OpenStack.
+installation. This installation is not typically used in production, but it serves as
+an environment to hack OpenStack - as hackability is important in OpenStack.
+DevStack can also be useful if you want to experiment with OpenStack.
 
-If your choice of hypervisor is XenServer, it is now easier to get started with
+If your choice of hypervisor is XenServer, it is now even easier to get started with
 DevStack, as a tested XVA Virtual Appliance is built on a daily basis.
 
 In this blog, I will guide you through the steps on how to get the mentioned
@@ -29,12 +29,12 @@ command:
 
     xe sr-list name-label="Local storage" params=type --minimal
 
-The command should return `ext`. If it does not return ext, but other, you will
-need to change your SR type to ext.
+The command should return `ext`. If it does not return ext, but something else, you will
+need to change your SR type to ext (See http://support.citrix.com/article/ctx116324)
 
 It is also recommended to have at least 6 gigabytes of memory in that physical
-machine. 1 gigabyte is required for Dom0, 3 gigabytes are required for the
-DevStack VM, and the rest could be used to launch OpenStack VMs.
+machine. 1 gigabyte is required for Dom0, 3 gigabytes are recommended for the
+DevStack VM, and the rest will be used to launch OpenStack VMs.
 
 ## Networking
 
@@ -87,6 +87,12 @@ The following output is displayed:
     Warning: Permanently added 'localhost' (RSA) to the list of known hosts.
     Trust relation working
     Pack installation successful.
+    
+Note that in addition to installing the plugins that match the virtual appliance, the RPM will create
+directories used by the plugins, and create an RSA key so the host can ssh into itself to
+allow the resize functionality to work.  If you are deploying multiple XVAs then you will
+need to copy this key across to the other appliances as well as making the changes to devstack
+needed to connect the OpenStack services.
 
 The next step is to download and install the virtual appliance:
 
@@ -143,7 +149,7 @@ Log in with admin/citrix, and enjoy stacking!
 
 If you want to access the VM, use stack/citrix as login/password.
 
-All the scripts that used to generate the xva are available at our qa
+All the scripts that used to generate the xva are available from our qa
 repository:
 
     https://github.com/citrix-openstack/qa
