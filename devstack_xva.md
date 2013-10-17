@@ -9,8 +9,11 @@ DevStack can also be useful if you want to experiment with OpenStack.
 If your choice of hypervisor is XenServer, it is now even easier to get started with
 DevStack, as a tested XVA Virtual Appliance is built on a daily basis.
 
+This XVA is created with the [following script](https://github.com/citrix-openstack/qa/blob/master/install-devstack-xen.sh).
+The networking component is nova-network, with FlatDHCP manager.
+
 In this blog, I will guide you through the steps on how to get the mentioned
-XVA up and running on XenServer installation.
+XVA up and running on a XenServer installation.
 
 The process consists of 2 steps:
  - Install the appliance and the supplemental pack
@@ -100,7 +103,9 @@ The next step is to download and install the virtual appliance:
     xe vm-import filename=devstack-10_15_2013.xva
 
 Now you have a devstack virtual machine installed on your XenServer, ready to 
-launch.
+launch. After the import, the xva should be removed from dom0's filesystem:
+
+     rm devstack-10_15_2013.xva
 
 # Step 2: Start the appliance
 
