@@ -68,8 +68,41 @@ fixed.
 
 It's time to deploy the cloud to a XenServer, using the deployment script that
 we have just created. My server's name is `hanwavel.eng.hq.xensource.com`. To
-deploy my development cloud to that box, the following has to be done:
+deploy my development cloud to that box, I will need to run the generated
+script. To learn about what parameters does it take, run the script without
+arguments:
+
+    bash neutron-investigation/deploy-0.sh
+
+At the end of the screen you will see a typical example to be used. Let's
+follow on that for now:
+
+    ssh-keygen -t rsa -N "" -f devstack_key.priv
+    ssh-keyscan hanwavel.eng.hq.xensource.com >> ~/.ssh/known_hosts
+
+Now we have a file `devstack_key.priv` and we can communicate with the host
+without being asked. Let's deploy the cloud:
+
+    bash neutron-investigation/deploy-0.sh \
+        hanwavel.eng.hq.xensource.com \
+        xenroot devstack_key.priv \
+        -t smoke
+
+What we are expecting from this instruction is to deploy a cloud with neutron
+and run smoke tests on that. After a minute or so, a surprise happened:
+
+    +++ set +o xtrace
+    line 41: declare: -A: invalid option
+    declare: usage: declare [-afFirtx] [-p] [name[=value] ...]
 
 
+That's an error message which needs to be fixed. I created a new branch on my
+github repository, and fixed the issue with [this fix](https://github.com/matelakat/devstack/commit/1372e3d40fa41a4fa0f9dbb3443b0a93367ce84f).
+Now what I need to do is to modify the deployment script to use my own devstach
+branch. See `deploy-1.sh` for that.  Let's see if my fix worked:
 
+    bash neutron-investigation/deploy-1.sh \
+        hanwavel.eng.hq.xensource.com \
+        xenroot devstack_key.priv \
+        -t smoke
 
