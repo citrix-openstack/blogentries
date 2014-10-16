@@ -315,3 +315,85 @@ This resulted in the following output:
 
 Which means I successfully got to the tests. Now I will need to do some
 cleanup, and also re-build the hypervisor to do another run.
+
+I'm triggering a re-build of my hypervisor before doing a re-run with the
+cleaned-up revision
+
+### Cleanup
+
+#### Always update mirrors
+
+We have an JeOS template that refers to an internal ubuntu mirror. If I wanted
+to use another mirror, I have no other chanses just to create another xva with
+those the new mirror settings. I woul rather prefer the `/etc/apt/sources.list`
+file being updated all the time.
+
+#### Invalid vi configuration file
+
+Within DomU whenever I opened a file with vi, it was complaining:
+
+    stack@DevStackOSDomU:~$ vi /etc/init.d/networking
+    Error detected while processing /opt/stack/.vimrc:
+    line    1:
+    E319: Sorry, the command is not available in this version: syntax on
+    Press ENTER or type command to continue
+
+This is rather annoying. I need to fix that issue by excluding the `syntax on`
+line from the `.vimrc` installed by devstack.
+
+#### Being able to quit after jeos template installation
+
+When I created a jeos template, I also had to run all the tests and devstack,
+whereas my only goal would be to create the appliance. Those bits either need
+to be extracted to a different script, or a parameter would be useful to
+specify that the script should quit after installation of the basic operating
+system.
+
+The modifications related to this script are contained in `deploy-6.sh`.
+
+### Re-run
+
+It's time to re-run devstack. To achieve this, I remove the old neutron
+settings, see `deploy-7.sh` for the updated script. Removed only
+`OVS_VLAN_RANGES` for the first run:
+
+    bash neutron-investigation/deploy-7.sh \
+        hanwavel.eng.hq.xensource.com xenroot \
+        devstack_key.priv -t smoke
+
+It seems that `deploy-7.sh` did not succeed. The error message that I get is:
+
+    Error: Service q-agt is not running
+
+Again, use screen to investigate. On `q-agt`, the following message welcomes
+me:
+
+    [\'XENAPI_MISSING_PLUGIN\', \'netwrap\']
+
+The problem is that the dom0 plugins has not been installed. The installation
+of nova plugins has already been moved to domU, so it's time to move the
+installation of these plugins there as well. I am looking at how we install the
+nova plugins, and copy the code to neutron. Once it's working, I can refactor
+them to avoid code duplication. While I moved the plugin installation to domU,
+I realised that the main xenserver installation script `install_os_domU.sh`
+contained some references to functions that are no longer available, like
+`is_service_enabled`. I removed those instructions as well and modified the
+script so that it always sets up the environment to be ready for neutron. Those
+changes were pushed to my own devstack branch, and the end result is:
+
+    ======
+    Totals
+    ======
+    Run: 628 in 2716.470039 sec.
+     - Passed: 528
+     - Skipped: 59
+     - Failed: 41
+
+Another re-build of my hypervisor, and re-run the tests:
+
+    bash neutron-investigation/deploy-7.sh \
+        hanwavel.eng.hq.xensource.com xenroot \
+        devstack_key.priv -t smoke
+
+The result is the same as before, this could be a good starting point to fix
+the tests.
