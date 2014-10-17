@@ -389,9 +389,10 @@ changes were pushed to my own devstack branch, and the end result is:
      - Skipped: 59
      - Failed: 41
 
-Another re-build of my hypervisor, and re-run the tests:
+Another re-build of my hypervisor, create a new branch called `neutron-2014`
+and re-run the tests:
 
-    bash neutron-investigation/deploy-7.sh \
+    bash neutron-investigation/deploy-8.sh \
         hanwavel.eng.hq.xensource.com xenroot \
         devstack_key.priv -t smoke
 
