@@ -1,19 +1,19 @@
 # Debugging on VMs cannot get IP from DHCP agent with XenServer + Neutron
 
-XenServer+Neutron do work years before, but the support break when more
-and more changes made in neutron. I began getting XenServer+Neutron back
-to work with previous blog
+XenServer+Neutron used to work well, but the support was broken when more
+and more changes made in Neutron, and the lack of a CI environment with XenServer.
+I began getting XenServer+Neutron back to work with previous blog
 [openstack-networking-quantum-on-xenserver](http://blogs.citrix.com/2013/06/14/openstack-networking-quantum-on-xenserver-from-notworking-to-networking/)
 
         Deployment environment:
             XenServer: 6.5
-            OpenStack: latest master code
+            OpenStack: latest master code (September 2015)
             Network: ML2 plugin, OVS driver, VLAN type
             Single Box installation
  
 I had made some changes in DevStack script to let XenServer+Neutron be
 installed and ran properly.
-Below are some debugging processes I made when new launched VMs cannot get IP
+Below are some debugging processes I made when newly launched VMs cannot get IP
 from DHCP agent automatically.
 
 ### Brief description of VMs getting IP from DHCP process
@@ -21,7 +21,7 @@ When VMs are booting, they will try to send DHCP request broadcast message
 within the same domain and waiting for DHCP server's reply. 
 
 If VMs cannot get IP address, our straightforward reaction is to check whether 
-the packages from the VMs can be recieved by DHCP server, see this picture 
+the packets from the VMs can be recieved by DHCP server, see this picture
 [traffic flow](https://github.com/Annie-XIE/summary-os/blob/master/flow-VM-to-DomU.png)
 
 #### Dump traffic in Network Node
@@ -34,7 +34,7 @@ execute `sudo ip netns` in DomU, you probably get outputs like these
 
 *Note: qdhcp-xxx is the namespace for DHCP agent*
 
-##### 2. Check interface DHCP agent uses for L3 packages
+##### 2. Check interface DHCP agent uses for L3 packets
 execute `sudo ip netns exec qdhcp-49a623fd-c168-4f27-ad82-946bfb6df3d7 ifconfig`, 
 you can get interface like tapXXX 
 
@@ -59,30 +59,33 @@ you can get interface like tapXXX
 
 ##### 3. Monitor traffic flow with DHCP agent's interface tapXXX
 execute `sudo ip netns exec qdhcp-49a623fd-c168-4f27-ad82-946bfb6df3d7 tcpdump -i tap7b39ecad-81 -s0 -w dhcp.cap` 
-to monitor traffics flow with this interface
+to monitor traffic flow with this interface
 
 Theoretically, when launching a new instance, you should see DHCP request and
 reply messages like this:
+        16:29:40.710953 IP 0.0.0.0.bootpc > 255.255.255.255.bootps: BOOTP/DHCP, Request from fa:16:3e:f9:f6:b0 (oui Unknown), length 302
+        16:29:40.713625 IP 172.20.0.1.bootps > 172.20.0.10.bootpc: BOOTP/DHCP, Reply, length 330
 
 #### Dump traffic in Compute Node
 
 Meanwhile, you will definitely want to dump traffics at the VM side. 
 This should be done in compute node, and with xenserver this is actually in Dom0. 
 
-When new instance is launched, there will be a new virtual interface created named “vifX.0”. 
-For example, if the latest interface is vif20.0, the next one will mostly be vif21.0.
+When new instance is launched, there will be a new virtual interface created named “vifX.Y”.
+'X' is the domain ID for the new VM and Y is the ID if the VIF defined in XAPI.
+Domain IDs are sequential - if the latest interface is vif20.0, the next one will mostly be vif21.0.
 Then you can try `tcpdump -i vif21.0`. It may fail at first because the virtual interface
 is not created ready yet! But trying several times, once the virtual interface is created, 
-you can monitor the packages. 
+you can monitor the packets.
 
 Theoretically you should see DHCP request and reply in Dom0, like you see in DHCP agent side.
 
-*Note: If you cannot catch the dump package at the instance’s launching time, you can 
+*Note: If you cannot catch the dump packet at the instance’s launching time, you can
 also try this using `ifup eth0` by login the instance via XenCenter. `ifup eth0` 
 will also trigger the instance sending DHCP request.*
 
 ##### 1. Check DHCP request go out at VM side
-In most case, you should see the DHCP request package sent out from Dom0, this means
+In most case, you should see the DHCP request packet sent out from Dom0, this means
 that the VM itself is OK. It has sent out DHCP request message. 
 
 Note: Some images will try to send DHCP request from time to time until it get the respond
@@ -94,20 +97,20 @@ some people on the internet suggest changing images when launching instance cann
 ##### 2. Check DHCP request go in at DHCP server side
 But in my case, I cannot see any DHCP request from the DHCP agent side
 
-Where the request package goes? It’s possible that the packages are dropped? 
-Then who dropped these packages? Why drop them? 
+Where the request packet goes? It’s possible that the packets are dropped?
+Then who dropped these packets? Why drop them?
 
 If we think it a bit more, it’s either L2 or L3 that dropped. With this in mind, 
 we can begin to check one by one.
 For L3/L4,  I don’t set firewall and the security group’s default rule is to let 
-all packages go through. So, I don’t spent so much effort on this part.
+all packets go through. So, I don’t spent so much effort on this part.
 
 For L2, since we use  OVS, I begin to check OVS rules. It will take you much time 
 if you are not familiar with OVS. At least I spent much time on it for totally 
 understanding the mechanism and the rules.
 
 The main aim is to check that all existing rules in Dom0 and DomU, and then try 
-to find out which rule let the packages dropped.
+to find out which rule let the packets dropped.
 
 #### Check OVS flow rules
 
@@ -157,7 +160,7 @@ These rules in DomU looks like normal without suspicious, so go on with Dom0 and
 As analysis with this picture [traffic flow](https://github.com/Annie-XIE/summary-os/blob/master/flow-VM-to-DomU.png), 
 the traffic direction from VM to DHCP is xapiX->xapiY(Dom0), then ->br-eth1->br-int(DomU). 
 
-So, maybe some rules filtered the packages at layer 2 level by OVS. I do suspect 
+So, maybe some rules filtered the packets at layer 2 level by OVS. I do suspect
 xapiY although I cannot say direct reasons. So checked rules in xapiY, in our 
 case it is xapi3 actually.
 
@@ -203,7 +206,7 @@ So, will the flows be dropped? If the flow doesn’t have dl_vlan=1, it will be 
 *(1) For dl_vlan=1, this is the virtual LAN tag id which corresponding to the Port tag*
 
 *(2) I didn’t realize the problem is lacking tag for the new launched instance for 
-a long time due to my lack of OVS mechanism. Thus I don’t have such sense of checking 
+a long time due to my lack of OVS understanding. Thus I don’t have such sense of checking
 the port’s tag with this problem at first. So next time when we meet this problem, 
 we can check these part first.*
 
@@ -279,12 +282,16 @@ for the new launched instance, and I do get outputs like:
                                      new    "vif17.0" 3    
 
 So, this means the OVS monitor itself works well! There maybe other errors with the
-code that makes the monitoring. Seems it much more nearer with the root cause:)
+code that makes the monitoring. Seems it much more nearer with the root cause :)
 
 Finally, I found with XenServer, our current implementation cannot get the OVS monitor's
 output, and thus *q-agt* cannot know there is new port added. But lucky enough, 
 L2 Agent provide another way of getting the ports changes, and thus we can first use 
 that way instead.
 
-##### To be continued for VXLAN/GRE ...
+Setting minimize_polling=false in the L2 agent's configuration file ensures the
+Agent does not rely on "ovsdb-client monitor", which means that the port will be
+identified and the tag gets added!
 
+In this case, this is all that was needed to get an IP address and everything
+else worked normally.
