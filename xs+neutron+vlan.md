@@ -63,8 +63,9 @@ to monitor traffic flow with this interface
 
 Theoretically, when launching a new instance, you should see DHCP request and
 reply messages like this:
-        16:29:40.710953 IP 0.0.0.0.bootpc > 255.255.255.255.bootps: BOOTP/DHCP, Request from fa:16:3e:f9:f6:b0 (oui Unknown), length 302
-        16:29:40.713625 IP 172.20.0.1.bootps > 172.20.0.10.bootpc: BOOTP/DHCP, Reply, length 330
+
+                16:29:40.710953 IP 0.0.0.0.bootpc > 255.255.255.255.bootps: BOOTP/DHCP, Request from fa:16:3e:f9:f6:b0 (oui Unknown), length 302
+                16:29:40.713625 IP 172.20.0.1.bootps > 172.20.0.10.bootpc: BOOTP/DHCP, Reply, length 330
 
 #### Dump traffic in Compute Node
 
