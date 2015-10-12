@@ -145,9 +145,9 @@ this by using the hack above and create a temporary VM to bring the bridge
 into existance, then add an IP address and ping between your two hosts.
 
 As a final note, this works great with only connecting two hosts, but if
-you want to connect more than two then you have to use a mesh topology
-- with every host having a GRE tunnel to every other host.  This clearly
-- doesn't scale very far, so don't use this approach in production.
+you want to connect more than two then you have to use a mesh topology,
+with every host having a GRE tunnel to every other host.  This clearly
+doesn't scale very far, so don't use this approach in production.
 
 Now go ahead and create your VMs safe in the knowledge that there is
 an isolated private network with a direct connection between the two
