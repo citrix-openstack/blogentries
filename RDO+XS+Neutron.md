@@ -13,7 +13,9 @@ using RDO under RHEL7/CentOS7.
 1.1. Make sure SR is EXT3 (in the installer this is called XenDesktop optimised storage).
 
 1.2 Create network for OpenStack. In single box environment, 
-we need to create three networks, *Integration network*, *External network*, *VM network*.
+we need three networks, *Integration network*, *External network*, *VM network*.
+If you have appropriate networks for the above (for example, a network that gives
+you external access) then rename the existing network to have the appropriate name-label
 
 		xe network-create name-label=os-int-net
 		xe network-create name-label=os-ex-net
@@ -23,16 +25,17 @@ we need to create three networks, *Integration network*, *External network*, *VM
 Guest VM is used for installing OpenStack software.
 
 2.1. One VM per hypervisor using XenServer 6.5 and RHEL7/CentOS7 templates. 
-Please ensure that they are HVM guests.
+Please ensure that they are HVM guests (for example, create using the
+"Other Install Media" template)
 
-2.2. Create interface card for Guest VM
+2.2. Create interface networks for Guest VM
 
 		xe vif-create device=<device-id> network-uuid=<os-int-net-uuid> vm-uuid=<guest-vm-uuid>
 		xe vif-plug uuid=<vif-id-int-net>
 		xe vif-create device=<device-id> network-uuid=<os-ex-net-uuid> vm-uuid=<guest-vm-uuid>
 		xe vif-plug uuid=<vif-id-ex-net>
 
-*Note: device-id should be set according to your environment*
+*Note: device-id should be set according to the number of VIFs in your environment, or can be the string 'autodetect' to ask XAPI to pick the next device number*
 
 ##### 3. Install RDO
 3.1 [RDO Quickstart](https://www.rdoproject.org/Quickstart) gives detailed 
@@ -42,15 +45,8 @@ installation guide, please have a look before real work.
 
 3.3 Run `Step 1: Software repositories`. 
 
-*Note:* 
-
-*(a) Please remove the postfix `.orig` of `CentOS-XXX.repo.orig` 
-in folder `/etc/yum.repos.d` and then try `yum update -y`.*
-
-*(b) You may meet errors while executing yum update, you can ignore these 
-errors, some are not needed in our environment.*
-
-*(c) Reboot the VM after yum update.*
+*Note: If issues are encountered updating the yum repositories, check that appropriate
+upstream repositories are being used.  You may need to reboot the VM after yum update*
 
 3.4 Run `Step 2: Install Packstack Installer` to install packstack. 
 
@@ -79,7 +75,8 @@ You should set these configuration items according to your environment.
 `packstack --answer-file=<ANSWER_FILE>` instead of `packstack --all-in-one`.
 
 *Note: After the above steps, OpenStack is installed and its services should 
-begin running at the moment. But we should do some additional work with XenServer*
+begin running at the moment. But we should do some additional work to modify
+the environment to use XenServer*
 
 ##### 4. Configure GuestVM/Hypervisor communications
 4.1 Ensure XenServer network *os-int-net* has an interface attached to the Guest VMs
@@ -97,7 +94,7 @@ also be performed manually in dom0 for each compute node:
 
 4.3 Install the XenServer PV tools in the guest VM.
 
-4.4 Set up DHCP on the HIMN network for the gues VM, allowing each 
+4.4 Set up DHCP on the HIMN network for the guest VM, allowing each 
 compute VM to access it’s own hypervisor on the static address 169.254.0.1.
 
     domid=$(xenstore-read domid)
