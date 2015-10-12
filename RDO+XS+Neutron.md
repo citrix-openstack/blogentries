@@ -10,7 +10,7 @@ using RDO under RHEL7/CentOS7.
 			Network: Neutron, ML2 plugin, OVS, VLAN
 
 ##### 1. Install XenServer 6.5
-1.1. Make sure SR is EXT3 (in the installer this is called XenDesktop optimised storage)
+1.1. Make sure SR is EXT3 (in the installer this is called XenDesktop optimised storage).
 
 1.2 Create network for OpenStack. In single box environment, 
 we need to create three networks, *Integration network*, *External network*, *VM network*.
@@ -28,7 +28,9 @@ Please ensure that they are HVM guests.
 2.2. Create interface card for Guest VM
 
 		xe vif-create device=<device-id> network-uuid=<os-int-net-uuid> vm-uuid=<guest-vm-uuid>
-		xe vif-create device=<device-id> network-uuid=<os-ext-net-uuid> vm-uuid=<guest-vm-uuid>
+		xe vif-plug uuid=<vif-id-int-net>
+		xe vif-create device=<device-id> network-uuid=<os-ex-net-uuid> vm-uuid=<guest-vm-uuid>
+		xe vif-plug uuid=<vif-id-ex-net>
 
 *Note: device-id should be set according to your environment*
 
@@ -91,13 +93,12 @@ also be performed manually in dom0 for each compute node:
     vif=$(xe vif-create vm-uuid=$vm network-uuid=$net device=9)
     mac=$(xe vif-param-get uuid=$vif param-name=MAC)
     xe vm-param-set uuid=$vm xenstore-data:vm-data/himn_mac=$mac
+    xe vif-plug uuid=$vif
 
 4.3 Install the XenServer PV tools in the guest VM.
 
 4.4 Set up DHCP on the HIMN network for the gues VM, allowing each 
 compute VM to access it’s own hypervisor on the static address 169.254.0.1.
-
-**TODO: Have problem in this step, cannot get corresponding eth in /sys/class/net/xxx ????**
 
     domid=$(xenstore-read domid)
     mac=$(xenstore-read /local/domain/$domid/vm-data/himn_mac)
