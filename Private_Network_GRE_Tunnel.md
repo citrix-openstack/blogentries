@@ -10,10 +10,10 @@ For testing in OpenStack it's really useful to have a completely
 isolated private network, i.e. one that is not segregated using VLANs
 at the switch.  Neutron requires a list of VLANs that it can use and
 getting a VLAN segment allocated from central IT is difficult in many
-organisations, and impossible in many!  So, we want to set up a
-cross-host networking using the OVS.
+organisations, and impossible in many more!  So, to make things simple,
+we want to set up a private networking using the OVS.
 
-Further, the XenServer integration with OpenStack does not actually
+The existing XenServer integration with OpenStack does not actually
 make use of pools at all; every host is a "One host pool" (since the
 pool concept still exists even if there is only a single host).
 Therefore what we actually need is a cross-pool private network.
@@ -35,7 +35,7 @@ rest of the blog, so ensure this is unique.
 
     xe network-create name-label=private
 
-Now you may spot one of the idiosyncrasies of XenServer - bridges for
+Now we run into one of the idiosyncrasies of XenServer - bridges for
 networks do not get created until they are needed.  This means that
 this bridge does not yet exist!  A quick fix for this is to add the
 network to a VM, then remove it from the VM.  If you have a running VM
@@ -72,7 +72,7 @@ And on the second host:
     bridge=$(xe network-list name-label=private params=bridge minimal=true)
     ip addr add 192.168.76.2/255.255.255.0 dev $bridge
 
-Now we can connect the two hosts!  Again, this step needs to be run on
+Now we can connect the two hosts.  Again, this step needs to be run on
 both hosts.  Setting up a GRE tunnel needs to know the target
 endpoint, so use the public IP address of the other server in the
 below commands, not the address we just added on the 'private'
@@ -144,8 +144,7 @@ will be set up automatically!
 
 If you don't have VMs yet, you can confirm this by using
 the hack above and create a temporary VM to bring the bridge into
-existance, then add an IP address and ping away between your two
-hosts.
+existance, then add an IP address and ping between your two hosts.
 
 Now go ahead and create your VMs safe in the knowledge that there is
 an isolated private network with a direct connection between the two
