@@ -1,4 +1,4 @@
-# Cross-pool private networks with XenServer
+# Cross-pool private networks with XenServer - OpenStack and beyond
 
 For some time, XenServer has supported the concept of a "Cross-Server
 Private Network", as a private network that can be created between
@@ -10,18 +10,17 @@ For testing in OpenStack it's really useful to have a completely
 isolated private network, i.e. one that is not segregated using VLANs
 at the switch.  Neutron requires a list of VLANs that it can use and
 getting a VLAN segment allocated from central IT is difficult in many
-organisations, and impossible in many more!  So, to make things simple,
-we want to set up a private networking using the OVS.
-
-The existing XenServer integration with OpenStack does not actually
-make use of pools at all; every host is a "One host pool" (since the
-pool concept still exists even if there is only a single host).
-Therefore what we actually need is a cross-pool private network.
-Unfortunately this isn't supported by the DVSC vSwitch controller
-available with XenServer, so an alternative solution was needed.
+organisations, and impossible in many more!  So, to make things
+simple, we want to set up a private networking using the OVS.  The
+existing XenServer integration with OpenStack does not actually make
+use of pools at all; every host is a "One host pool" (since the pool
+concept still exists even if there is only a single host).  Therefore
+what we actually need is a cross-pool private network.  Unfortunately
+this isn't supported by the DVSC vSwitch controller available with
+XenServer, so an alternative solution was needed.
 
 The following steps have been verified on XenServer 6.5 SP1, but
-should work on many other versions.
+should work on other versions.
 
 # Creating a private network
 
@@ -53,13 +52,13 @@ And now, if you use ifconfig you will see that the bridge has been
 created.  Of course, this is a nasty hack that we will remove later in
 this blog.
 
-# Creating a GRE tunnel
+# Creating a temporary GRE tunnel
 
 If you perform the above steps on a second XenServer host, then we
 have two hosts both of which have a private network, but they cannot
 talk to each other.
 
-Let's give the XenServer hosts an IP address on the private network so
+Let's give each XenServer host an IP address on the private network so
 we can verify the GRE tunnel is working.  The following steps will
 also add a route for 192.168.76.0/24 through the 'private' network
 interface.
@@ -140,9 +139,12 @@ path.
 Of course, this udev rule needs to be added on both hosts, and the
 script needs to be added (and modified) to have the correct IP address
 of the _other_ host.  But once these have been added, the GRE tunnel
-will be set up automatically.  If you don't have VMs yet, you can confirm
-this by using the hack above and create a temporary VM to bring the bridge
-into existance, then add an IP address and ping between your two hosts.
+will be set up automatically.  If you don't have VMs yet, you can
+confirm this by using the hack above and create a temporary VM to
+bring the bridge into existance, then add an IP address and ping
+between your two hosts.  If you already have VMs, just give them a VIF
+on the 'private' network, start them up, give them an IP and prove the
+communication works between VMs on this private bridge.
 
 As a final note, this works great with only connecting two hosts, but if
 you want to connect more than two then you have to use a mesh topology,
