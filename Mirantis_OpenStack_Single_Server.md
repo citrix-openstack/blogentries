@@ -24,7 +24,14 @@ The following has been tested on XenServer 6.5 SP1 with Mirantis
 OpenStack 6.1 and the corresponding XenServer fuel plugin (see
 https://www.mirantis.com/products/openstack-drivers-and-plugins/fuel-plugins/)
 
-# Initial Network setup
+# Initial setup
+
+One key point is that the XenServer integration with OpenStack has
+some optimisations which means that only EXT3 storage is supported.
+Make sure when installing your XenServer you select Optimised for
+XenDesktop when prompted.  Use XenCenter to check that the SR type is
+EXT3 as fixing it after creating the VMs will require deleting the VMs
+and starting again.
 
 The XenServer fuel plugin for Mirantis OpenStack 6.1 currently only
 supports nova-network, so we'll use the FlatDHCPManager setup.  In the
@@ -62,7 +69,7 @@ associated with eth0 on the xenserver host which we will call
 This single-host deployment uses VMs to provide the infrastructure.  Make
 sure when you set up the VMs that they are all using the 'Other
 Install Media' template, and that they have at least 4GB RAM and 40GB
-disk space.
+disk space.  Don't start any of the VMs yet though!
 
 * Fuel: Used to host Mirantis OpenStack.  Add two networks, 'pxe' and
   'external'.
@@ -86,7 +93,7 @@ to make adding a private management network easy.  Source code and compilation i
 are available on github
 (https://github.com/citrix-openstack/xencenter-himn-plugin/).  Simply
 install the plugin, restart XenCenter, right mouse click on the
-Compute VM and add the host internal management network.  This network
+Compute VM and add the internal management network.  This network
 is a link-local network which will allow the Compute VM to talk to
 XAPI and provision our VMs.
 
@@ -98,7 +105,7 @@ service VMs must have access to the external world (specifically the
 Ubuntu repositories).  We've created the 'private' network to house
 these service VMs, and that clearly will not have access! Thankfully,
 as XenServer is based on a standard Linux distribution, modifying the
-network to make the XenServer host to act as a router is straight
+network to make the XenServer host to act as a gateway is straight
 forward.
 
 The cross-pool private network setup in
@@ -128,21 +135,23 @@ The following code snippet will:
     cat > /etc/udev/scripts/recreate-gateway.sh << RECREATE_GATEWAY
     #!/bin/bash
     if /sbin/ip link show $bridge > /dev/null 2>&1; then
-      if !(ip addr show $bridge | grep -q 172.16.1.1); then
-        ip addr add dev $bridge 172.16.1.1
+      if !(/sbin/ip addr show $bridge | /bin/grep -q 172.16.1.1); then
+        /sbin/ip addr add dev $bridge 172.16.1.1
       fi
-      if !(route -n | grep -q 172.16.1.0); then
-        route add -net 172.16.1.0 netmask 255.255.255.0 dev $bridge
+      if !(/sbin/route -n | /bin/grep -q 172.16.1.0); then
+        /sbin/route add -net 172.16.1.0 netmask 255.255.255.0 dev $bridge
       fi
     
-      if !(iptables -t nat -S | grep -q 172.16.1.0/24); then
-        iptables -t nat -A POSTROUTING -s 172.16.1.0/24 ! -d 172.16.1.0/24 -j MASQUERADE
+      if !(/sbin/iptables -t nat -S | /bin/grep -q 172.16.1.0/24); then
+        /sbin/iptables -t nat -A POSTROUTING -s 172.16.1.0/24 ! -d 172.16.1.0/24 -j MASQUERADE
       fi
     fi
     RECREATE_GATEWAY
     chmod +x /etc/udev/scripts/recreate-gateway.sh
     
-When we define the networks we will use this range for the "Public" network.
+Reboot the XenServer hosts, and then the udev rules will be active.
+When we define the networks in Mirantis OpenStack we will use this
+range for the "Public" network.
 
 # Deploying Fuel
 
@@ -156,8 +165,9 @@ Fuel web interface directly.
 
 Once Fuel is installed, you need to install the XenServer plugin.
 Download this from the Fuel Plugins catalog to the fuel VM and install
-using fuel plugins --install
-fuel-plugin-xenserver-1.0-1.0.1-1.noarch.rpm
+using
+
+    fuel plugins --install fuel-plugin-xenserver-1.0-1.0.1-1.noarch.rpm
 
 Finally, boot up your Compute and Controller VMs.  These have the
 'pxe' network as their first ethernet device, and are configured to
@@ -201,6 +211,22 @@ correctly.
 Click the magic 'Deploy Changes' button, grab a cup of coffee, and
 watch as your XenServer+OpenStack environment is created before your
 very eyes.
+
+Behind the scenes, quite a lot is going on
+
+As we've set Fuel's "public" IP range to be on the 'private' network,
+accessing it will need a tunnel or port forwarding.  I tend to use an
+SSH tunnel:
+
+    ssh root@xenserver -L 80:172.16.1.2:80
+
+Then your OpenStack Horizon can be accessed with a web browser pointed
+to http://localhost:80.
+
+Alternatively you can set up a route to go through the XenServer host
+to the 'private' network and extend the recreate-gateway script to
+setup the XenServer host as a gateway and use the same NAT technique
+to allow access to the 172.16.1 range from your machine.
 
 # Final thoughts
 
