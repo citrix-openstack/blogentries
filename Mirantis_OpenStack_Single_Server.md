@@ -1,37 +1,44 @@
 # Deploying Mirantis OpenStack on a single XenServer - The power of SDN
 
-Networking in OpenStack is often cited as one of the more complicated
-things to set up.  This is made even more complicated if you don't
-have control over the switches or have a lengthy approval process with
-IT - ironically one of the things that IaaS solutions are intended to
-ease!
+Mirantis have recently published a Fuel Plugin
+(https://www.mirantis.com/products/openstack-drivers-and-plugins/fuel-plugins/)
+for XenServer, allowing you to easily use the hypervisor deployed by
+the world's largest cloud with OpenStack.  The integration with
+Mirantis OpenStack makes the whole deployment straight forward - once
+the physical networking is defined.
 
-One of the advantages of using XenServer for your OpenStack cloud is
-that the networking is fully abstracted from the Compute VMs and the
-instances.  This means you can manipulate the network mapping between
-the physical devices and what OpenStack expects the networking setup
-to be.  In fact, XenCenter, XenServer's Windows GUI, allows you to
-create networks based on VLAN tags and to give them descriptive names
-and other metadata - but there is of course a lot more power available
-under the hood.
+The networking topology is often cited as one of the more complicated
+things to set up in OpenStack, particularly if you don't have control
+over the switches or have a lengthy approval process with IT -
+ironically one of the things that IaaS solutions are intended to ease!
+This is where the power of Software Defined Networking (SDN) comes
+into play.
+
+When using XenServer for your OpenStack cloud, the networking is fully
+abstracted from the Compute VMs and the instances.  This means you can
+use XenServer to manipulate the network mapping between the physical
+devices and what OpenStack expects the networking to be.  In fact,
+XenCenter, XenServer's Windows GUI, allows you to create networks
+based on VLAN tags and to give them descriptive names and other
+metadata - but there is of course a lot more power available under the
+hood.
 
 When you combine this flexible setup with Mirantis OpenStack's
 easy-to-use interface and strong network verification steps, you can
-simply define almost any setup for your OpenStack environemnt using
+simply define almost any setup for your OpenStack environment using
 XenServer.
 
-The following has been tested on XenServer 6.5 SP1 with Mirantis
-OpenStack 6.1 and the corresponding XenServer fuel plugin (see
-https://www.mirantis.com/products/openstack-drivers-and-plugins/fuel-plugins/)
+The following procedure describes how to set this all up.  It has been
+tested on XenServer 6.5 SP1 with Mirantis OpenStack 6.1 and the
+corresponding XenServer fuel plugin.
 
 # Initial setup
 
-One key point is that the XenServer integration with OpenStack has
-some optimisations which means that only EXT3 storage is supported.
-Make sure when installing your XenServer you select Optimised for
-XenDesktop when prompted.  Use XenCenter to check that the SR type is
-EXT3 as fixing it after creating the VMs will require deleting the VMs
-and starting again.
+The XenServer integration with OpenStack has some optimisations which
+means that only EXT3 storage is supported.  Make sure when installing
+your XenServer you select Optimised for XenDesktop when prompted.  Use
+XenCenter to check that the SR type is EXT3 as fixing it after
+creating the VMs will require deleting the VMs and starting again.
 
 The XenServer fuel plugin for Mirantis OpenStack 6.1 currently only
 supports nova-network, so we'll use the FlatDHCPManager setup.  In the
@@ -64,12 +71,12 @@ that from the external world, so we assume there is a network
 associated with eth0 on the xenserver host which we will call
 'external'.
 
-# Initial Virtual Machine setup
+# Virtual Machine setup
 
 This single-host deployment uses VMs to provide the infrastructure.  Make
 sure when you set up the VMs that they are all using the 'Other
 Install Media' template, and that they have at least 4GB RAM and 40GB
-disk space.  Don't start any of the VMs yet though!
+disk space.  Don't start any of the VMs yet though!  Create three VMs:
 
 * Fuel: Used to host Mirantis OpenStack.  Add two networks, 'pxe' and
   'external'.
@@ -129,25 +136,27 @@ The following code snippet will:
   to provide network address translation services to any traffic that
   is being sent to the gateway.
 
-    echo 'SUBSYSTEM=="net" ACTION=="add" KERNEL=="xapi*" RUN+="/etc/udev/scripts/recreate-gateway.sh"' > /etc/udev/rules.d/90-gateway.rules
+```
+echo 'SUBSYSTEM=="net" ACTION=="add" KERNEL=="xapi*" RUN+="/etc/udev/scripts/recreate-gateway.sh"' > /etc/udev/rules.d/90-gateway.rules
 
-    bridge=$(xe network-list name-label=private params=bridge minimal=true)
-    cat > /etc/udev/scripts/recreate-gateway.sh << RECREATE_GATEWAY
-    #!/bin/bash
-    if /sbin/ip link show $bridge > /dev/null 2>&1; then
-      if !(/sbin/ip addr show $bridge | /bin/grep -q 172.16.1.1); then
-        /sbin/ip addr add dev $bridge 172.16.1.1
-      fi
-      if !(/sbin/route -n | /bin/grep -q 172.16.1.0); then
-        /sbin/route add -net 172.16.1.0 netmask 255.255.255.0 dev $bridge
-      fi
-    
-      if !(/sbin/iptables -t nat -S | /bin/grep -q 172.16.1.0/24); then
-        /sbin/iptables -t nat -A POSTROUTING -s 172.16.1.0/24 ! -d 172.16.1.0/24 -j MASQUERADE
-      fi
-    fi
-    RECREATE_GATEWAY
-    chmod +x /etc/udev/scripts/recreate-gateway.sh
+bridge=$(xe network-list name-label=private params=bridge minimal=true)
+cat > /etc/udev/scripts/recreate-gateway.sh << RECREATE_GATEWAY
+#!/bin/bash
+if /sbin/ip link show $bridge > /dev/null 2>&1; then
+  if !(/sbin/ip addr show $bridge | /bin/grep -q 172.16.1.1); then
+    /sbin/ip addr add dev $bridge 172.16.1.1
+  fi
+  if !(/sbin/route -n | /bin/grep -q 172.16.1.0); then
+    /sbin/route add -net 172.16.1.0 netmask 255.255.255.0 dev $bridge
+  fi
+
+  if !(/sbin/iptables -t nat -S | /bin/grep -q 172.16.1.0/24); then
+    /sbin/iptables -t nat -A POSTROUTING -s 172.16.1.0/24 ! -d 172.16.1.0/24 -j MASQUERADE
+  fi
+fi
+RECREATE_GATEWAY
+chmod +x /etc/udev/scripts/recreate-gateway.sh
+```
     
 Reboot the XenServer hosts, and then the udev rules will be active.
 When we define the networks in Mirantis OpenStack we will use this
@@ -174,8 +183,8 @@ Finally, boot up your Compute and Controller VMs.  These have the
 boot from network, so Mirantis OpenStack will discover the VMs and
 register them, ready to be used.
 
-Now everything is set up - it's really easily create your
-XenServer-based OpenStack environment.
+Now everything is set up - as you can see, it's really easily to
+create your XenServer-based OpenStack environment.
 
 # Creating the environment
 
