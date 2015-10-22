@@ -122,26 +122,26 @@ The following code snippet will:
   to provide network address translation services to any traffic that
   is being sent to the gateway.
 
-echo 'SUBSYSTEM=="net" ACTION=="add" KERNEL=="xapi*" RUN+="/etc/udev/scripts/recreate-gateway.sh"' > /etc/udev/rules.d/90-gateway.rules
+    echo 'SUBSYSTEM=="net" ACTION=="add" KERNEL=="xapi*" RUN+="/etc/udev/scripts/recreate-gateway.sh"' > /etc/udev/rules.d/90-gateway.rules
 
-bridge=$(xe network-list name-label=private params=bridge minimal=true)
-cat > /etc/udev/scripts/recreate-gateway.sh << RECREATE_GATEWAY
-#!/bin/bash
-if /sbin/ip link show $bridge > /dev/null 2>&1; then
-  if !(ip addr show $bridge | grep -q 172.16.1.1); then
-    ip addr add dev $bridge 172.16.1.1
-  fi
-  if !(route -n | grep -q 172.16.1.0); then
-    route add -net 172.16.1.0 netmask 255.255.255.0 dev $bridge
-  fi
-
-  if !(iptables -t nat -S | grep -q 172.16.1.0/24); then
-    iptables -t nat -A POSTROUTING -s 172.16.1.0/24 ! -d 172.16.1.0/24 -j MASQUERADE
-  fi
-fi
-RECREATE_GATEWAY
-chmod +x /etc/udev/scripts/recreate-gateway.sh
-
+    bridge=$(xe network-list name-label=private params=bridge minimal=true)
+    cat > /etc/udev/scripts/recreate-gateway.sh << RECREATE_GATEWAY
+    #!/bin/bash
+    if /sbin/ip link show $bridge > /dev/null 2>&1; then
+      if !(ip addr show $bridge | grep -q 172.16.1.1); then
+        ip addr add dev $bridge 172.16.1.1
+      fi
+      if !(route -n | grep -q 172.16.1.0); then
+        route add -net 172.16.1.0 netmask 255.255.255.0 dev $bridge
+      fi
+    
+      if !(iptables -t nat -S | grep -q 172.16.1.0/24); then
+        iptables -t nat -A POSTROUTING -s 172.16.1.0/24 ! -d 172.16.1.0/24 -j MASQUERADE
+      fi
+    fi
+    RECREATE_GATEWAY
+    chmod +x /etc/udev/scripts/recreate-gateway.sh
+    
 When we define the networks we will use this range for the "Public" network.
 
 # Deploying Fuel
