@@ -212,7 +212,12 @@ Click the magic 'Deploy Changes' button, grab a cup of coffee, and
 watch as your XenServer+OpenStack environment is created before your
 very eyes.
 
-Behind the scenes, quite a lot is going on
+Behind the scenes, quite a lot is going on.  Mirantis OpenStack is
+installing Ubuntu on the service VMs, then installing OpenStack.  The
+XenServer plugin is configuring them to work with XenServer and
+installing critical OpenStack XAPI plugins on the XenServer host.
+Finally, the images used to deploy to VMs (a TestVM called Cirros and
+a larger Fedora image used for Heat testing) are installed.
 
 As we've set Fuel's "public" IP range to be on the 'private' network,
 accessing it will need a tunnel or port forwarding.  I tend to use an
