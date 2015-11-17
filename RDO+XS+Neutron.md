@@ -6,7 +6,7 @@ using RDO under RHEL7/CentOS7.
 		Environment:
 			XenServer: 6.5
 			CentOS: 7.0
-			OpenStack: Kilo
+			OpenStack: Liberty
 			Network: Neutron, ML2 plugin, OVS, VLAN
 
 ##### 1. Install XenServer 6.5
@@ -105,8 +105,7 @@ to access its own hypervisor on the static address 169.254.0.1.
 
     [DEFAULT]
     compute_driver=xenapi.XenAPIDriver
-    firewall_driver=nova.virt.firewall.NoopFirewallDriver
-    
+
     [xenserver]
     connection_url=http://169.254.0.1
     connection_username=root
@@ -159,7 +158,7 @@ refer [xenserver_neutron picture](https://github.com/Annie-XIE/summary-os/blob/m
 
 7.1 Create another configuration file
 
-    cp /etc/neutron/plugins/openvswitch/ovs_neutron_plugin.ini /etc/neutron/plugins/openvswitch/ovs_neutron_plugin.ini.dom0
+    cp /etc/neutron/plugins/ml2/openvswitch_agent.ini /etc/neutron/plugins/ml2/openvswitch_agent.ini.dom0
     
     [ovs]
     integration_bridge = xapi3
@@ -177,7 +176,7 @@ refer [xenserver_neutron picture](https://github.com/Annie-XIE/summary-os/blob/m
 
 7.2 Launch neutron-openvswitch-agent
 
-    /usr/bin/python2 /usr/bin/neutron-openvswitch-agent --config-file /usr/share/neutron/neutron-dist.conf --config-file /etc/neutron/neutron.conf --config-file /etc/neutron/plugins/openvswitch/ovs_neutron_plugin.ini.dom0 --config-dir /etc/neutron/conf.d/neutron-openvswitch-agent --log-file /var/log/neutron/openvswitch-agent.log.dom0 &
+    /usr/bin/python2 /usr/bin/neutron-openvswitch-agent --config-file /usr/share/neutron/neutron-dist.conf --config-file /etc/neutron/neutron.conf --config-file /etc/neutron/plugins/ml2/openvswitch_agent.ini.dom0 --config-dir /etc/neutron/conf.d/neutron-openvswitch-agent --log-file /var/log/neutron/openvswitch-agent.log.dom0 &
 
 7.3 Restart Neutron Openvswitch agent
 
