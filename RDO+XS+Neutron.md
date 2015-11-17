@@ -30,8 +30,10 @@ to Dom0, let the script do it automatically.
 
 2.2 Create virtual network interfaces for OpenStack VM
 
-		xe vif-create device=<devid> network-uuid=<int_net_uuid> vm-uuid=<vm_uuid>
+		xe vif-create device=<devid> network-uuid=<vm_net_uuid> vm-uuid=<vm_uuid>
+		xe vif-plug uuid=<vif-id-vm-net>
 		xe vif-create device=<devid> network-uuid=<ext_net_uuid> vm-uuid=<vm_uuid>
+		xe vif-plug uuid=<vif-id-ext-net>
 
 *Note: device-id should be set according to the number of VIFs in your environment, 
 or can be the string 'autodetect' to ask XAPI to pick the next device number*
@@ -67,8 +69,8 @@ These items should be changed according to your environment:
 
     CONFIG_DEFAULT_PASSWORD=<your-password>
     CONFIG_NEUTRON_ML2_VLAN_RANGES=<physnet1:1000:1050>
-    CONFIG_NEUTRON_OVS_BRIDGE_MAPPINGS=<physnet1:br-eth1>
-    CONFIG_NEUTRON_OVS_BRIDGE_IFACES=<br-eth1:eth1>
+    CONFIG_NEUTRON_OVS_BRIDGE_MAPPINGS=<physnet1:br-eth1,phyext:br-ex>
+    CONFIG_NEUTRON_OVS_BRIDGE_IFACES=<br-eth1:eth1,br-ex:eth2>
 
 Use `packstack --answer-file=<ANSWER_FILE>` to install OpenStack components.
 
