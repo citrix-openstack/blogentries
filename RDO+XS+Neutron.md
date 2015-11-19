@@ -52,11 +52,15 @@ This step requires the VM to be shut down, as it's modifying the
 network setup and the PV tools have not been installed in the guest.
 
     vm_uuid=$(xe vm-list name-label=CentOS_RDO minimal=true)
+    
     vm_net_uuid=$(xe network-list name-label=openstack-vm-network minimal=true)
-    ext_net_uuid=$(xe network-list name-label=openstack-ext-network minimal=true)
-    vm_vif_uuid=$(xe vif-create device=autodetect network-uuid=$vm_net_uuid vm-uuid=$vm_uuid)
-    ext_vif_uuid=$(xe vif-create device=autodetect network-uuid=$ext_net_uuid vm-uuid=$vm_uuid)
+    next_device=$(xe vm-param-get uuid=$vm_uuid param-name=allowed-VIF-devices | cut -d';' -f1)
+    vm_vif_uuid=$(xe vif-create device=$next_device network-uuid=$vm_net_uuid vm-uuid=$vm_uuid)
     xe vif-plug uuid=$vm_vif_uuid
+    
+    ext_net_uuid=$(xe network-list name-label=openstack-ext-network minimal=true)
+    next_device=$(xe vm-param-get uuid=$vm_uuid param-name=allowed-VIF-devices | cut -d';' -f1)
+    ext_vif_uuid=$(xe vif-create device=$next_device network-uuid=$ext_net_uuid vm-uuid=$vm_uuid)
     xe vif-plug uuid=$ext_vif_uuid
 
 ##### 3. Install RDO
