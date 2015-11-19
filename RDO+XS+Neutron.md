@@ -41,6 +41,7 @@ is provided for some of the later steps in this blog rely on these specific
 name labels, so if you chose not to use them then please also update the helper script.
 
 You can do this via XenCenter or run the following commands in dom0:
+
 		xe network-create name-label=openstack-int-network
 		xe network-create name-label=openstack-ext-network
 		xe network-create name-label=openstack-vm-network
