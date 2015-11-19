@@ -63,6 +63,28 @@ network setup and the PV tools have not been installed in the guest.
     ext_vif_uuid=$(xe vif-create device=$next_device network-uuid=$ext_net_uuid vm-uuid=$vm_uuid)
     xe vif-plug uuid=$ext_vif_uuid
 
+2.3 Configure OpenStackVM/Hypervisor communications
+
+Use [HIMN tool](http://ca.downloads.xensource.com/OpenStack/Plugins/SetupHIMN-1.0.1.zip) 
+(plugin for XenCenter) to add internal management network to OpenStack VMs. 
+This effectively performs the following operations, which could also be performed 
+manually in dom0 or use 
+[rdo_xenserver_helper.sh](https://github.com/Annie-XIE/summary-os/blob/master/rdo_xenserver_helper.sh).
+
+	source rdo_xenserver_helper.sh
+	create_himn 
+
+
+**Note:**
+*If using the manual commands, they should be run when the Compute VM is shut down*
+
+Set up DHCP on the HIMN network for OpenStack VM, allowing OpenStack VM to 
+access its own hypervisor on the static address 169.254.0.1, run helper script
+in domU.
+
+    source rdo_xenserver_helper.sh
+    active_himn_interface
+
 ##### 3. Install RDO
 3.1 [RDO Quickstart](https://www.rdoproject.org/Quickstart) gives detailed 
 installation guide, please follow the instruction step by step. 
@@ -97,14 +119,14 @@ eth2 is OpenStack VM's NIC which connected to `External network`.
 
 Use `packstack --answer-file=<ANSWER_FILE>` to install OpenStack services.
 
-##### 5. Configure Nova and Neutron
+##### 4. Configure Nova and Neutron
 
-5.1 Copy Nova and Neutron plugins to XenServer host.
+4.1 Copy Nova and Neutron plugins to XenServer host.
 
 		source rdo_xenserver_helper.sh
 		install_dom0_plugins <dom0_ip>
 
-5.2 Edit /etc/nova/nova.conf, switch compute driver to XenServer. 
+4.2 Edit /etc/nova/nova.conf, switch compute driver to XenServer. 
 
     [DEFAULT]
     compute_driver=xenapi.XenAPIDriver
@@ -121,12 +143,12 @@ Use `packstack --answer-file=<ANSWER_FILE>` to install OpenStack services.
 
 `xe network-list name-label=openstack-int-network params=bridge`
 
-5.3 Install XenAPI Python XML RPC lightweight bindings.
+4.3 Install XenAPI Python XML RPC lightweight bindings.
 
     yum install -y python-pip
     pip install xenapi
 
-5.4 Configure Neutron
+4.4 Configure Neutron
 
 Edit */etc/neutron/rootwrap.conf* to support uing XenServer remotely.
 
@@ -137,7 +159,7 @@ Edit */etc/neutron/rootwrap.conf* to support uing XenServer remotely.
     xenapi_connection_username=root
     xenapi_connection_password=<password>
     
-5.4 Restart Nova and Neutron Services
+4.5 Restart Nova and Neutron Services
 
     for svc in api cert conductor compute scheduler; do \
 	    service openstack-nova-$svc restart; \
@@ -145,13 +167,13 @@ Edit */etc/neutron/rootwrap.conf* to support uing XenServer remotely.
     
     service neutron-openvswitch-agent restar
 
-##### 6. Launch another neutron-openvswitch-agent for talking with Dom0
+##### 5. Launch another neutron-openvswitch-agent for talking with Dom0
 XenServer has a seperation of Dom0 and DomU and all instances' VIFs are actually 
 managed by Dom0. Their corresponding OVS ports are created in Dom0. Thus, we should manually
 start the other ovs agent which is in charge of these ports and is talking to Dom0, 
 refer [xenserver_neutron picture](https://github.com/Annie-XIE/summary-os/blob/master/xs-neutron-deployment.png).
 
-6.1 Create another configuration file
+5.1 Create another configuration file
 
     cp /etc/neutron/plugins/ml2/openvswitch_agent.ini /etc/neutron/plugins/ml2/openvswitch_agent.ini.dom0
     
@@ -174,18 +196,18 @@ refer [xenserver_neutron picture](https://github.com/Annie-XIE/summary-os/blob/m
 
 `xe network-list name-label=openstack-vm-network params=bridge`
 
-6.2 Launch neutron-openvswitch-agent
+5.2 Launch neutron-openvswitch-agent
 
     /usr/bin/python2 /usr/bin/neutron-openvswitch-agent --config-file /usr/share/neutron/neutron-dist.conf --config-file /etc/neutron/neutron.conf --config-file /etc/neutron/plugins/ml2/openvswitch_agent.ini.dom0 --config-dir /etc/neutron/conf.d/neutron-openvswitch-agent --log-file /var/log/neutron/openvswitch-agent.log.dom0 &
 
-##### 7. Replace cirros guest with one set up to work for XenServer
+##### 6. Replace cirros guest with one set up to work for XenServer
 		nova image-delete cirros
 
 		wget http://ca.downloads.xensource.com/OpenStack/cirros-0.3.4-x86_64-disk.vhd.tgz
 
 		glance image-create --name cirros --container-format ovf --disk-format vhd --property vm_mode=xen --visibility public --file cirros-0.3.4-x86_64-disk.vhd.tgz
 
-##### 8. Launching instance and test its connectivity
+##### 7. Launching instance and test its connectivity
 
 		source keystonerc_demo
 
