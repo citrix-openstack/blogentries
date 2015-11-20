@@ -74,7 +74,6 @@ manually in dom0 or use
 	source rdo_xenserver_helper.sh
 	create_himn 
 
-
 **Note:**
 *If using the manual commands, they should be run when the Compute VM is shut down*
 
@@ -95,7 +94,8 @@ This manual only pointed out the steps that must pay attation during installatio
 Rather than running packstack immediately, we need to generate an answerfile
 so we can tweak the configuration.
 
-Use `packstack --gen-answer-file=<ANSWER_FILE>` to generate answer file.
+`packstack --gen-answer-file=<ANSWER_FILE>` to generate answer file and
+`packstack --answer-file=<ANSWER_FILE>` to install OpenStack services.
 
 These items in <ANSWER_FILE> should be changed as below:
 
@@ -117,14 +117,12 @@ which connected to `VM network`.
 `phyext:br-ex`,`br-ex:eth2` br-ex is ovs bridge for `External network`, neutron L3 agent use it for external traffic.
 eth2 is OpenStack VM's NIC which connected to `External network`.
 
-Use `packstack --answer-file=<ANSWER_FILE>` to install OpenStack services.
-
 ##### 4. Configure Nova and Neutron
 
 4.1 Copy Nova and Neutron plugins to XenServer host.
 
 		source rdo_xenserver_helper.sh
-		install_dom0_plugins <dom0_ip>
+		install_dom0_plugins
 
 4.2 Edit /etc/nova/nova.conf, switch compute driver to XenServer. 
 
@@ -132,7 +130,7 @@ Use `packstack --answer-file=<ANSWER_FILE>` to install OpenStack services.
     compute_driver=xenapi.XenAPIDriver
 
     [xenserver]
-    connection_url=http://<dom0_ip>
+    connection_url=http://169.254.0.1
     connection_username=root
     connection_password=<password>
     vif_driver=nova.virt.xenapi.vif.XenAPIOpenVswitchDriver
@@ -142,6 +140,8 @@ Use `packstack --answer-file=<ANSWER_FILE>` to install OpenStack services.
 *The integration_bridge above can be found from dom0:*
 
 `xe network-list name-label=openstack-int-network params=bridge`
+
+*169.254.0.1 is hypervisor Dom0's address which OpenStack VM can reach via HIMN*
 
 4.3 Install XenAPI Python XML RPC lightweight bindings.
 
@@ -155,7 +155,7 @@ Edit */etc/neutron/rootwrap.conf* to support uing XenServer remotely.
     [xenapi]
     # XenAPI configuration is only required by the L2 agent if it is to
     # target a XenServer/XCP compute host's dom0.
-    xenapi_connection_url=http://<dom0_ip>
+    xenapi_connection_url=http://169.254.0.1
     xenapi_connection_username=root
     xenapi_connection_password=<password>
     
