@@ -26,7 +26,7 @@ Of course we cannot let users manually do that. So the process mentioned above i
 
 The reason we need to make our own release is because
 
-* First we need to customize the wizard as well as some other setting tabs in order to narrow down all options to only of those that fits in XenServer
+* First we need to customize the wizard as well as some other setting tabs in order to narrow down all options to only of those that fits in XenServer. e.g. Nova-network with FlatDHCP Manager and Cinder
 * Second we have to trigger some additional consequent processes which we will discuss in the following sections to complement the environment
 * Last but not the least we need to require user to provide the XenServer hosts' credential information in order to ssh into XenServer hosts to patch something. That is why we need to create our own region in setting tabs as below.
 
@@ -81,7 +81,7 @@ In order to implement it, we need iptable and routing table.
     sed -i s/#net.ipv4.ip_forward/net.ipv4.ip_forward/g /etc/sysctl.conf
     sysctl -p /etc/sysctl.conf
 
-* Suppose HIMN is on eth3, we will forward packets from HIMN to management and storage network
+* Suppose HIMN is on eth3, we will forward packets from HIMN to management and storage network. br-storage and br-mgmt below, literally, refer to the existing interfaces.
 
 
 	iptables -t nat -A POSTROUTING -o br-storage -j MASQUERADE
@@ -92,7 +92,7 @@ In order to implement it, we need iptable and routing table.
 	iptables -A FORWARD -i eth3 -o br-mgmt -j ACCEPT
 
 
-* Next we route packets to management and storage network go through HIMN as a gateway. The IP address of management and storage network is set in `/etc/astute.yaml` as well as other orchestration information.
+* Next we route packets to management and storage network go through HIMN as a gateway. The IP address of management network, storage network and HIMN is stored in `/etc/astute.yaml` as well as other orchestration information. You need to parse them out and put them into below commands.
 
 
     route add -net mgmt_ip netmask mgmt_mask gw himn_ip
@@ -116,7 +116,7 @@ Please be noted that the image names have to be strictly the same because it is 
 
 #### Other miscs
 
-Actually XenServer fuel plugin will something more, like:
+Actually XenServer fuel plugin do will something more, like:
 
 * Patch the nova.conf to fix novnc proxy
 * Delivery a script to rotate guest logs as it will meet OpenStack standards
