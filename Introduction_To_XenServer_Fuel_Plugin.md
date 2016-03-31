@@ -1,42 +1,40 @@
 ### Introduction To XenServer Fuel Plugin
 
-As becoming part of the Big Tent, Mirantis Fuel has already made itself one of the leader installers for OpenStack and offers an pluggable architecture that enable you to add new capabilities to your environments. To take advantage of that, XenServer Fuel Plugin is aiming to deploy production-level OpenStack clusters rigidly and flexibly upon XenServer hosts. To be more specific we want to achieve the following major goals:
+As becoming part of the Big Tent, Mirantis Fuel has already made itself one of the leader installers for OpenStack and offers an pluggable architecture that enable you to add new capabilities to your environments. To take advantage of that, XenServer Fuel Plugin is aiming to enables use of the XenServer open source hypervisor (version 6.5. SP1) as a compute provider on Mirantis OpenStack, with commercial support options from Citrix. To be more specific we want to achieve the following major goals:
 
-* Customize Fuel UI
-* Reconfigure default hypervisor type
-* Patch Nova plugins and XenAPI SDK
-* Forward Management/Storage traffic over HIMN
-* Replace test images
+* Customize user interface
+* Configure hypervisor type
+* Apply patches
+* Reschedule control networks
+* Modify guest images
 
 In this blog post, we will have a close look of how XenServer Fuel plugin glues these things together. The outline will also be based on that.
 
-#### Customize Fuel UI
+#### Customize user interface
 
-One of the major characteristics that Mirantis really pride themselves is Fuel is highly GUI-based. Fuel UI is a single page application written in JavaScript. User can go through a wizard making choices from a variety of hypervisor, network or storage types and other extra OpenStack services, and then cover the specific settings of the environment in a list of categorized tabs. You can even drag and drop the network interfaces. Generally, in Fuel UI everything has been redesigned for visual concerns.
+One of the major characteristics that Mirantis really pride themselves is Fuel is highly GUI-based. Fuel UI is a single page application written in JavaScript. User can go through a wizard making choices from a variety of hypervisor, network or storage types and other extra OpenStack services, and then cover the specific settings of the environment in a list of categorized tabs. You can even drag and drop the network interfaces. Generally, in Fuel UI configuration has been redesigned for visual concerns.
 
 ![XenServer Fuel plugin wizzard](https://github.com/openstack/fuel-plugin-xenserver/blob/master/doc/source/_static/fmwizard00.png?raw=true)
 
-However, to get started, the first step, as shown in above picture, is to select an installable OpenStack release which can be defined like [openstack.yaml](https://github.com/openstack/fuel-web/blob/master/nailgun/nailgun/fixtures/openstack.yaml). We have to create our own version, then upload it to the suitable container hosted inside Fuel Master and finally let nailgun service load it into database. Here comes the code.
+Moreover, Mirantis Fuel even provides a control plane to let you customize the UI. As long as you follow the schema like [openstack.yaml](https://github.com/openstack/fuel-web/blob/master/nailgun/nailgun/fixtures/openstack.yaml), a brand new OpenStack release can be defined and exercised by Fuel. As shown in the above picture, we create our own release of OpenStack - "Liberty+Citrix XenServer on Ubuntu 14.04" - and upload it to Nailgun service, which contains all the business logic of the system. Interestingly, Mirantis seems to be also in fond of container technology and hosts most of major components inside the docker containers. Here comes the command.
 
-	dockerctl copy newrelease.yaml nailgun:/tmp/newrelease.yaml
-	dockerctl shell nailgun manage.py loaddata /tmp/newrelease.yaml
-	fuel rel --sync-deployment-tasks --dir /etc/puppet/
+    dockerctl copy xs_release.yaml nailgun:/tmp/xs_release.yaml
+    dockerctl shell nailgun manage.py loaddata /tmp/xs_release.yaml
+    fuel rel --sync-deployment-tasks --dir /etc/puppet/
 
-Of course we cannot let users manually do that. So the process mentioned above is automated using [post_install.sh](https://github.com/openstack/fuel-plugin-xenserver/blob/master/post_install.sh) which will be exercised implicitly when installing XenServer Fuel plugin because its hard-coded name has been registered as a hook. Correspondingly, the release will be deleted with [uninstall.sh](https://github.com/openstack/fuel-plugin-xenserver/blob/master/uninstall.sh) when XenServer Fuel plugin is uninstalled.
+The reason to have an own release is we need to filter out incompatible user options. For example, as XenServer is chosen to be the hypervisor of the cluster, vCenter should be disabled. Another example is since VXLAN support hasn't been implemented for XenAPI, so we can only let user select VLAN for network segmentation.
 
-The reason we need to make our own release is because
-
-* First we need to customize the wizard as well as some other setting tabs in order to narrow down all options to only of those that fits in XenServer. e.g. Nova-network with FlatDHCP Manager and Cinder
-* Second we have to trigger some additional consequent processes which we will discuss in the following sections to complement the environment
-* Last but not the least we need to require user to provide the XenServer hosts' credential information in order to ssh into XenServer hosts to patch something. That is why we need to create our own region in setting tabs as below.
+Except a self-defined OpenStack release, Mirantis also provide another approach for Fuel plugin to customize user interface. Within environment_config.yaml we define a bunch of attributes which finally will be rendered as the form shown below.
 
 ![XenServer Fuel plugin credential tab](https://github.com/openstack/fuel-plugin-xenserver/blob/master/doc/source/_static/fmsetting00.png?raw=true)
 
-if you are interested in how Nailgun manages the data gathered by Fuel UI and hand it over to another submodule called Astute for the further provisioning actions, you will like to read more details from [Fuel- OpenStack Wiki](https://wiki.openstack.org/wiki/Fuel)
+With this form, we can require user to provide the XenServer hosts' credential information in order to ssh into XenServer hosts to apply patches later on.
 
-#### Reconfigure default hypervisor type
+If you are interested in how Nailgun manages the data gathered by Fuel UI and hand it over to another submodule called Astute for the further provisioning actions, more details from [Fuel- OpenStack Wiki](https://wiki.openstack.org/wiki/Fuel) will be quite useful.
 
-For now XenServer hasn't been included in the Fuel's built-in hypervisor types which are qemu, kvm and vmware. In our solution we start with qemu and change to xen when everything is settled down. The approach to change hypervisor type is quite straightforward, just write below settings to `/etc/nova/nova-compute.conf` and restart Nova services.
+#### Configure hypervisor type
+
+For now in Mirantis Fuel there are only three built-in hypervisor types which are qemu, kvm and vmware and XenServer hasn't been included. Our solution will get started with qemu and change it back to XenServer when all prerequisites have been settled down. Change hypervisor type is quite straightforward, just write below settings to `/etc/nova/nova-compute.conf` and restart Nova services.
 
     [DEFAULT]
     compute_driver=xenapi.XenAPIDriver
@@ -45,82 +43,80 @@ For now XenServer hasn't been included in the Fuel's built-in hypervisor types w
     connection_username="root"
     connection_password="XENSERVER_PASSWORD"
 
-Then it will reflect as below picture shows.
+But the timing to do the change might be tricky. Fortunately Mirantis Fuel provides a flexible hook mechanism essentially based on Puppet task dependencies. Once it is done, the new hypervisor type will reflect in Horizon like below.
 
 ![XenServer Fuel plugin horizon](https://github.com/openstack/fuel-plugin-xenserver/blob/master/doc/source/_static/fmhorizon00.png?raw=true)
 
-#### Patch Nova plugins and XenAPI SDK
+#### Apply patches
 
-However changing the hypervisor type isn't enough. The communication between xapi with Nova plugin on Dom0 and Nova services with XenAPI SDK is key in XenServer OpenStack. It can be explicitly shown in the below diagram.
+However changing the hypervisor type is just the first step. The communication between xapi and Nova services need to be set up like shown in the below diagram. So we need to patch some files.
 
-![xenserver_architecture](http://docs.openstack.org/kilo/config-reference/content/figures/2/a/a/common/figures/xenserver_architecture.png)
+![xenserver_architecture](http://docs.openstack.org/liberty/config-reference/content/figures/2/a/a/common/figures/xenserver_architecture.png)
 
-We have to inject Nova plugins and XenAPI SDK into Dom0 and compute nodes individually.
+Usually the best way to apply patches to XenServer hosts, or more precisely, Dom0, is to pack the changed files into a XenServer supplemental pack and call xe CLI to install it.
 
-Nova plugin is a standard XenServer supplemental pack built from OpenStack Nova code repository. Use xe CLI to install it.
+    xe-install-supplemental-pack /tmp/novaplugins-liberty.iso
 
-    xe-install-supplemental-pack /tmp/novaplugins-kilo.iso
+Still, timing is important and we better to take steps. The major steps can be install-pv-tool, install-dpkg-dependencies and install-sup-pack. So the task dependencies probably will be like this:
 
-XenAPI SDK is a single python script which delegates the XMLRPC calling to xapi. We only need to copy it to `/usr/lib/python2.7/dist-packages/` on compute nodes to let it take effect.
+    - id: 'install-pv-tool'
+      role: ['compute']
+      required_for: ['compute-post-deployment']
+      requires: ['post_deployment_start']
+    - id: 'install-dpkg-dependencies'
+      role: ['compute']
+      required_for: ['compute-post-deployment']
+      requires: ['post_deployment_start']
+    - id: 'install-sup-pack'
+      role: ['compute']
+      required_for: ['post_deployment_end']
+      requires: ['install-pv-tool', 'install-dpkg-dependencies']
 
-#### Forward Management/Storage traffic over HIMN
+More information about Fuel's hook mechanism can be found in [deployment_tasks.yaml](https://wiki.openstack.org/wiki/Fuel/Plugins#deployment_tasks.yaml).
 
-Host Internal Management Network (aka. HIMN) is special internal network inside XenServer. It has the following characteristics:
+#### Reschedule control networks
 
-* It is invisible via XenCenter. It means it cannot be manually operated with a GUI program. If you want to see it or set it, you have to go with CLI.
-* It is a built-in network separated from others with DHCP service running over it. It means you don't have to spend any effort on setting up one.
-* The IP address of dom0 on HIMN is fixed as `169.254.0.1`.
+In XenServer, Host Internal Management Network (aka. HIMN) is a special internal network and has the following characteristics:
 
-Based on that, HIMN is ideal for carrying all XenAPI RPC traffics between compute nodes and Dom0. Moreover, we want it carry management and storage traffics since Nova plugin in some cases will use storage network. And if we do so, we don't need to set up two more interfaces to these two networks for Dom0.
+* It is a built-in network isolated from others.
+* It is invisible in XenCenter. So some potential risks will be reduced.
+* There is DHCP service already running on this network and the IP address of dom0 is fixed as `169.254.0.1`.
 
-In order to implement it, we need iptable and routing table.
+We see HIMN is ideal for internal use and you don't have to spend effort on setting up one. More importantly, Dom0 need to have access to OpenStack control networks as well as Compute nodes do. If we forward control packets via HIMN, that will be easier than setting up additional interfaces for Dom0. And in a sense, Dom0 and Compute node can be regarded as one unity.
 
-* First of all, we enable ip_forward on Compute nodes
-
+Here is the code. We create iptable rules in Compute nodes:
 
     sed -i s/#net.ipv4.ip_forward/net.ipv4.ip_forward/g /etc/sysctl.conf
     sysctl -p /etc/sysctl.conf
+    iptables -t nat -A POSTROUTING -o br-storage -j MASQUERADE
+    iptables -A FORWARD -i br-storage -o eth3 -m state --state RELATED,ESTABLISHED -j ACCEPT
+    iptables -A FORWARD -i eth3 -o br-storage -j ACCEPT
+    iptables -t nat -A POSTROUTING -o br-mgmt -j MASQUERADE
+    iptables -A FORWARD -i br-mgmt -o eth3 -m state --state RELATED,ESTABLISHED -j ACCEPT
+    iptables -A FORWARD -i eth3 -o br-mgmt -j ACCEPT
 
-* Suppose HIMN is on eth3, we will forward packets from HIMN to management and storage network. br-storage and br-mgmt below, literally, refer to the existing interfaces.
-
-
-	iptables -t nat -A POSTROUTING -o br-storage -j MASQUERADE
-	iptables -A FORWARD -i br-storage -o eth3 -m state --state RELATED,ESTABLISHED -j ACCEPT
-	iptables -A FORWARD -i eth3 -o br-storage -j ACCEPT
-	iptables -t nat -A POSTROUTING -o br-mgmt -j MASQUERADE
-	iptables -A FORWARD -i br-mgmt -o eth3 -m state --state RELATED,ESTABLISHED -j ACCEPT
-	iptables -A FORWARD -i eth3 -o br-mgmt -j ACCEPT
-
-
-* Next we route packets to management and storage network go through HIMN as a gateway. The IP address of management network, storage network and HIMN is stored in `/etc/astute.yaml` as well as other orchestration information. You need to parse them out and put them into below commands.
-
+`br-storage` and `br-mgmt` refer to OpenStack Storage network and Management networks. They are the OpenStack control networks we talk about. Then we change the default gateway in Dom0.
 
     route add -net mgmt_ip netmask mgmt_mask gw himn_ip
     route add -net storage_ip netmask mgmt_mask gw himn_ip
 
-* Last but not the least, don't forget to persist everything.
+#### Modify guest images
 
-#### Replace test images
+One of greatest advantages in Fuel is Health Check. Fuel will go through a list of test cases including booting up some guest VMs and test the functionalities. But we still need to specify appropriate images because specific images are for specific hypervisors.
 
-One of greatest features in Fuel is its Health Check. To let it work, we still need to replace the test images because specific test images are for specific hypervisors. But this time we will do that from controller node by calling glance CLI.
+Please be noted that Fuel will always pick up test images strictly with hard-coded names.
 
-	wget http://ca.downloads.xensource.com/OpenStack/cirros-0.3.4-x86_64-disk.vhd.tgz
-	glance image-create --name F17-x86_64-cfntools --container-format ovf --disk-format vhd \
-	 --property vm_mode=xen --is-public True --file cirros-0.3.4-x86_64-disk.vhd.tgz
+    wget http://ca.downloads.xensource.com/OpenStack/cirros-0.3.4-x86_64-disk.vhd.tgz
+    glance image-create --name "TestVM" --container-format ovf --disk-format vhd --property vm_mode="xen" --visibility public --file "cirros-0.3.4-x86_64-disk.vhd.tgz"
 
-	wget http://ca.downloads.xensource.com/OpenStack/F21-x86_64-cfntools.tgz
-	glance image-create --name F17-x86_64-cfntools --container-format ovf --disk-format vhd \
-	 --property vm_mode=hvm --is-public True --file cirros-0.3.4-x86_64-disk.vhd.tgz
+    wget http://ca.downloads.xensource.com/OpenStack/F21-x86_64-cfntools.tgz
+    glance image-create --name "F17-x86_64-cfntools" --container-format ovf --disk-format vhd --property vm_mode="hvm" --visibility public --file "F17-x86_64-cfntools.tgz"
 
-Please be noted that the image names have to be strictly the same because it is hard coded in Fuel.
+#### Other misc.
 
-#### Other miscs
+Actually XenServer Fuel plugin will be used to deliver other patches, like:
 
-Actually XenServer fuel plugin do will something more, like:
-
-* Patch the nova.conf to fix novnc proxy
-* Delivery a script to rotate guest logs as it will meet OpenStack standards
-* Turn on config drive for file injection
-* Check if necessary XenServer hotfix is installed
-
-But mostly they are trivial functions so we don't have to go too keep into them here.
+* novnc proxy patch
+* guest logs reformatter patch
+* config drive patch
+* Validation for necessary hotfix
