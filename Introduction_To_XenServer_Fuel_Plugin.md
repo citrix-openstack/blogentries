@@ -6,7 +6,8 @@ As becoming part of the Big Tent, Mirantis Fuel has already made itself one of t
 * Configure hypervisor type
 * Apply patches
 * Reschedule control networks
-* Modify guest images
+* Deliver new features and patches
+* Modify test image
 
 In this blog post, we will have a close look of how XenServer Fuel plugin glues these things together. The outline will also be based on that.
 
@@ -100,23 +101,43 @@ Here is the code. We create iptable rules in Compute nodes:
     route add -net mgmt_ip netmask mgmt_mask gw himn_ip
     route add -net storage_ip netmask mgmt_mask gw himn_ip
 
-#### Modify guest images
+#### Deliver new features and patches
 
-One of greatest advantages in Fuel is Health Check. Fuel will go through a list of test cases including booting up some guest VMs and test the functionalities. But we still need to specify appropriate images because specific images are for specific hypervisors.
+Actually this plugin will also be used to deliver new features and patches like:
 
-Please be noted that Fuel will always pick up test images strictly with hard-coded names.
+* Neutron plugins : Neutron support for XenServer was introduced into upstream in Mitaka, cannot reflect in Mirantis Fuel 8 which uses Liberty.
+* novnc proxy patch : VNC server runs on Dom0 by default but it is supposed to run on Compute node.
+* guest console logs patch : The console logs of guests VMs are in different format with OpenStack Nova expects.
+* config drive patch : Config drive should be set to the default option for file injection rather than libguestfs which is default for other QEMU-based hypervisors.
+* Validation for hotfix : XenServer supplemental pack XS65ESP1013 needs to be installed otherwise Virtual Block Device (VBD) connections could be mapped incorrectly.
+
+#### Modify test image
+
+The default test image uploaded by Fuel is a qemu-specific cirros so we need to replace it with a XenServer one.
+
+Please be noted that Fuel Health check, which will be covered in the next chapter, always picks up the test image "TestVM" as the name is hard-coded.
 
     wget http://ca.downloads.xensource.com/OpenStack/cirros-0.3.4-x86_64-disk.vhd.tgz
-    glance image-create --name "TestVM" --container-format ovf --disk-format vhd --property vm_mode="xen" --visibility public --file "cirros-0.3.4-x86_64-disk.vhd.tgz"
+    glance image-create --name "TestVM" \
+      --container-format ovf --disk-format vhd \
+      --property vm_mode="xen" --visibility public \
+      --file "cirros-0.3.4-x86_64-disk.vhd.tgz"
 
-    wget http://ca.downloads.xensource.com/OpenStack/F21-x86_64-cfntools.tgz
-    glance image-create --name "F17-x86_64-cfntools" --container-format ovf --disk-format vhd --property vm_mode="hvm" --visibility public --file "F17-x86_64-cfntools.tgz"
+#### Health check
 
-#### Other misc.
+Fuel UI has a tab which is called Health Check. It is one of greatest advantages of Fuel. Fuel Health Check will go through the following categories of automated tests:
 
-Actually XenServer Fuel plugin will be used to deliver other patches, like:
+    Sanity tests
+    Functional tests
+    HA tests
+    Platform services functional tests
+    Cloud validation tests
+    Configuration tests
 
-* novnc proxy patch
-* guest logs reformatter patch
-* config drive patch
-* Validation for necessary hotfix
+If all above are selected, usually it will take 20-40 minutes to run. Finally, looking at the test table that passes all the tests as below, it seems all the hard work has paid off.
+
+![Health check results](mos8-healthcheck-result.png?raw=true)
+
+XenServer Fuel plugin has been validated since Fuel 6.1 and listed in the [Fuel plugin Catalog](https://www.mirantis.com/validated-solution-integrations/fuel-plugins/). This is also where is most recommended to download it.
+
+And the [XenCenter HIMN plugin repo](https://github.com/citrix-openstack/xencenter-himn-plugin) can be found under the GitHub account of Citrix OpenStack.
