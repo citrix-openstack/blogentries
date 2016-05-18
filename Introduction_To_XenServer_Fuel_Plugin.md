@@ -1,6 +1,6 @@
-### Introduction To XenServer Fuel Plugin
+### Introduction to XenServer Fuel Plugin
 
-As becoming part of the Big Tent, Mirantis Fuel has already made itself one of the leader installers for OpenStack and offers an pluggable architecture that enable you to add new capabilities to your environments. To take advantage of that, XenServer Fuel Plugin is aiming to enables use of the XenServer open source hypervisor (version 6.5. SP1) as a compute provider on Mirantis OpenStack, with commercial support options from Citrix. To be more specific we want to achieve the following major goals:
+As becoming part of the Big Tent, Mirantis Fuel has already made itself one of the leader installers for OpenStack and offers an pluggable architecture that enable you to add new capabilities to your environments. XenServer Fuel Plugin is aiming to enables use of the XenServer open source hypervisor (version 6.5. SP1) as a compute provider on Mirantis OpenStack, with commercial support options from Citrix. This blog post will cover how to do the following topics with XenServer Fuel Plugin:
 
 * Customize user interface
 * Configure hypervisor type
@@ -9,29 +9,17 @@ As becoming part of the Big Tent, Mirantis Fuel has already made itself one of t
 * Deliver new features and patches
 * Modify test image
 
-In this blog post, we will have a close look of how XenServer Fuel plugin glues these things together. The outline will also be based on that.
-
 #### Customize user interface
 
-One of the major characteristics that Mirantis really pride themselves is Fuel is highly GUI-based. Fuel UI is a single page application written in JavaScript. User can go through a wizard making choices from a variety of hypervisor, network or storage types and other extra OpenStack services, and then cover the specific settings of the environment in a list of categorized tabs. You can even drag and drop the network interfaces. Generally, in Fuel UI configuration has been redesigned for visual concerns.
+Mirantis Fuel is highly GUI-based. As a single web page application written in JavaScript, user can easily choose OpenStack release, hypervisor type, network or storage backends and extra OpenStack services like Murano or Sahara through a wizard. More detailed specific settings can be configured in a list of categorized settings tabs. You can even drag and drop the network interfaces. Generally, in Fuel UI configuration has been redesigned to make it really user-friendly.
 
 ![XenServer Fuel plugin wizzard](https://github.com/openstack/fuel-plugin-xenserver/blob/master/doc/source/_static/fmwizard00.png?raw=true)
 
-Moreover, Mirantis Fuel even provides a control plane to let you customize the UI. As long as you follow the schema like [openstack.yaml](https://github.com/openstack/fuel-web/blob/master/nailgun/nailgun/fixtures/openstack.yaml), a brand new OpenStack release can be defined and exercised by Fuel. As shown in the above picture, we create our own release of OpenStack - "Liberty+Citrix XenServer on Ubuntu 14.04" - and upload it to Nailgun service, which contains all the business logic of the system. Interestingly, Mirantis seems to be also in fond of container technology and hosts most of major components inside the docker containers. Here comes the command.
+Moreover, Mirantis Fuel even provides a control plane to let you customize the UI. As long as you follow the schema like [openstack.yaml](https://github.com/openstack/fuel-web/blob/master/nailgun/nailgun/fixtures/openstack.yaml), user can define their own OpenStack release. In Mirantis 8.0, user can even define their own resource type with [components.yaml](https://wiki.openstack.org/wiki/Fuel/Plugins#Component_compatibility_registry). In above screen shot, a hypervisor type "XenServer" is defined. And if you choose it, the subsequent wizzard and setting tabs will represent based on your choice and the incompatible list described in components.yaml. This feature is really useful because OpenStack setup is compilicated and there are many restrictions. With incompatible list, users will be prevented from making wrong choices.
 
-    dockerctl copy xs_release.yaml nailgun:/tmp/xs_release.yaml
-    dockerctl shell nailgun manage.py loaddata /tmp/xs_release.yaml
-    fuel rel --sync-deployment-tasks --dir /etc/puppet/
-
-The reason to have an own release is we need to filter out incompatible user options. For example, as XenServer is chosen to be the hypervisor of the cluster, vCenter should be disabled. Another example is since VXLAN support hasn't been implemented for XenAPI, so we can only let user select VLAN for network segmentation.
-
-Except a self-defined OpenStack release, Mirantis also provide another approach for Fuel plugin to customize user interface. Within environment_config.yaml we define a bunch of attributes which finally will be rendered as the form shown below.
+In addition to provide restriction, Mirantis also provide a way to add input to web UI. In environment_config.yaml we define text fields to ask for XenServer credential information because we need to ssh into XenServer hosts to apply patches later on which finally will be rendered as shown below.
 
 ![XenServer Fuel plugin credential tab](https://github.com/openstack/fuel-plugin-xenserver/blob/master/doc/source/_static/fmsetting00.png?raw=true)
-
-With this form, we can require user to provide the XenServer hosts' credential information in order to ssh into XenServer hosts to apply patches later on.
-
-If you are interested in how Nailgun manages the data gathered by Fuel UI and hand it over to another submodule called Astute for the further provisioning actions, more details from [Fuel- OpenStack Wiki](https://wiki.openstack.org/wiki/Fuel) will be quite useful.
 
 #### Configure hypervisor type
 
@@ -113,7 +101,7 @@ Actually this plugin will also be used to deliver new features and patches like:
 
 #### Modify test image
 
-The default test image uploaded by Fuel is a qemu-specific cirros so we need to replace it with a XenServer one.
+The default test image "TestVM" is a qemu-specific cirros so need to be replaced with a XenServer one.
 
 Please be noted that Fuel Health check, which will be covered in the next chapter, always picks up the test image "TestVM" as the name is hard-coded.
 
@@ -123,9 +111,11 @@ Please be noted that Fuel Health check, which will be covered in the next chapte
       --property vm_mode="xen" --visibility public \
       --file "cirros-0.3.4-x86_64-disk.vhd.tgz"
 
+In the latest XenServer Fuel plugin 3.1 (corresponding to MOS 8.0), the TestVM image has been embedded in the plugin in case the deployment has new internet connection.
+
 #### Health check
 
-Fuel UI has a tab which is called Health Check. It is one of greatest advantages of Fuel. Fuel Health Check will go through the following categories of automated tests:
+Fuel Health Check, or officially called OpenStack Testing Framework, is one of greatest advantages of Fuel. Fuel Health Check will go through the following categories of automated tests, and take usually 20-40 minutes to estimate the availability of a deployed environment.
 
     Sanity tests
     Functional tests
@@ -134,9 +124,11 @@ Fuel UI has a tab which is called Health Check. It is one of greatest advantages
     Cloud validation tests
     Configuration tests
 
-If all above are selected, usually it will take 20-40 minutes to run. Finally, looking at the test table that passes all the tests as below, it seems all the hard work has paid off.
+If everything goes right, you will get a result report like below:
 
 ![Health check results](mos8-healthcheck-result.png?raw=true)
+
+#### Where to download
 
 XenServer Fuel plugin has been validated since Fuel 6.1 and listed in the [Fuel plugin Catalog](https://www.mirantis.com/validated-solution-integrations/fuel-plugins/). This is also where is most recommended to download it.
 
