@@ -192,7 +192,7 @@ Step-8. VM1's packages finally went out through br-ex, see the physical route
 
 For package back from external network to VM, vice versa.
 
-##### 2..2 East-West network traffic
+##### 2.2.2 East-West network traffic
 
 When talking about East-West traffic, the packages route will quite different
 depending on where the VMs residing and whether the VMs belonging to the same tenant.
