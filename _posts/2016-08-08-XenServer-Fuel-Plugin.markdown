@@ -1,6 +1,6 @@
 ---
 title: Introduction to XenServer Fuel Plugin
-date: 2016-08-08 14:33:00 Z
+date: 2016-05-08 14:33:00 Z
 ---
 
 Mirantis Fuel, which is a member of the OpenStack Big Tent has already made
