@@ -28,8 +28,7 @@ categorised settings tabs. You can even drag and drop the network interfaces.
 Generally, in Fuel UI configuration has been redesigned to make it really
 user-friendly.
 
-![XenServer Fuel plugin wizard]
-(https://github.com/openstack/fuel-plugin-xenserver/blob/master/doc/source/_static/fmwizard00.png?raw=true)
+![fmwizard00.png](/uploads/fmwizard00.png)
 
 Moreover, Mirantis Fuel even provides a control plane to let you customise the
 UI. As long as you follow the schema like [openstack.yaml]
@@ -49,8 +48,7 @@ web UI. In environment_config.yaml we define text fields to ask for XenServer
 credential information because we need to ssh into XenServer hosts to apply
 patches later on which will be presented to the user in the web UI.
 
-![XenServer Fuel plugin credential tab]
-(https://github.com/openstack/fuel-plugin-xenserver/blob/master/doc/source/_static/fmsetting00.png?raw=true)
+![fmsetting00.png](/uploads/fmsetting00.png)
 
 #### Configuring use of XenServer
 
@@ -72,8 +70,7 @@ But the timing to do the change might be tricky. Fortunately Mirantis Fuel
 provides a flexible hook mechanism based on Puppet task dependencies. Once it is
 done, the new hypervisor type will reflect in Horizon like below.
 
-![XenServer Fuel plugin horizon]
-(https://github.com/openstack/fuel-plugin-xenserver/blob/master/doc/source/_static/fmhorizon00.png?raw=true)
+![fmhorizon00.png](/uploads/fmhorizon00.png)
 
 #### Install required plugins
 
@@ -81,8 +78,7 @@ However changing the hypervisor type is just the first step. The communication
 between XAPI and Nova services need to be set up like shown in the below
 diagram. So we need to install some plugins.
 
-![xenserver_architecture]
-(http://docs.openstack.org/liberty/config-reference/content/figures/2/a/a/common/figures/xenserver_architecture.png)
+![XenServer Architecture](/uploads/687474703a2f2f646f63732e6f70656e737461636b2e6f72672f6c6962657274792f636f6e6669672d7265666572656e63652f636f6e74656e742f666967757265732f322f612f612f636f6d6d6f6e2f666967757265732f78656e7365727665725f6172636869746563747572652e706e67.png)
 
 Usually the best way to apply patches to XenServer hosts, or more precisely,
 Dom0, is to pack the changed files into a XenServer supplemental pack and call
@@ -202,7 +198,7 @@ of a deployed environment.
 
 If everything goes right, you will get a result report like below:
 
-![Health check results](mos8-healthcheck-result.png?raw=true)
+![Health check results](/uploads/mos8-healthcheck-result.png)
 
 #### Where to download
 
