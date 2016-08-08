@@ -10,7 +10,6 @@ OpenStack 8.0, which integrates with Neutron for the first time.
 You can download our plugin from the
 [Mirantis fuel plugin](https://www.mirantis.com/validated-solution-integrations/fuel-plugins/) page.
 
-
 In this blog, I will focus on network part since neutron project is introduced in
 XenServer Fuel plugin for the first time. For basic Mirantis OpenStack, Mirantis Fuel
 and XenServer introduction, you can refer previous
