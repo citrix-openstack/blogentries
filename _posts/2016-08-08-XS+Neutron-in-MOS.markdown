@@ -5,15 +5,13 @@ published: false
 ---
 
 Mirantis OpenStack is a highly popular OpenStack distribution and Citrix has released
-an official XenServer [Fuel](https://wiki.openstack.org/wiki/Fuel) plugin based on Mirantis
+an official XenServer [Fuel](https://wiki.openstack.org/wiki/Fuel) plug-in based on Mirantis
 OpenStack 8.0, which integrates with Neutron for the first time.
-You can download our plugin from the
-[Mirantis fuel plugin](https://www.mirantis.com/validated-solution-integrations/fuel-plugins/) page.
+You can download our plug-in from the
+[Mirantis fuel plug-in](https://www.mirantis.com/validated-solution-integrations/fuel-plugins/) page.
 
 In this blog, I will focus on network part since neutron project is introduced in
-XenServer Fuel plugin for the first time. For basic Mirantis OpenStack, Mirantis Fuel
-and XenServer introduction, you can refer previous
-[blog post](https://www.citrix.com/blogs/2016/07/11/introduction-to-xenserver-fuel-plugin/).
+XenServer Fuel plug-in for the first time. For an introduction to Mirantis OpenStack and the XenServer plug-in, please refer to a previous [blog post](https://www.citrix.com/blogs/2016/07/11/introduction-to-xenserver-fuel-plugin/).
 
 ### 1. Neutron brief
 
@@ -22,13 +20,13 @@ Glance (image), Cinder (storage). It provides high level abstraction of network 
 such as network, subnet, port, router, etc. Further it enforces SDN, delegating its implementation
 and functionalities to the plugin, which is not possible in nova-network.
 
-The picture from the OpenStack offical website describes typical deployment with Neutron.
+The picture from the OpenStack official website describes typical deployment with Neutron.
 
 * Controller node: Provide management functions, such as API servers and scheduling
   services for Nova, Neutron, Glance and Cinder. It's the central part where most standard
   OpenStack services and tools run.
 
-* Network node: Provide network sevices, runs networking plug-in, layer 2 agent,
+* Network node: Provide network services, runs networking plug-in, layer 2 agent,
   and several layer 3 agents. Handles external connectivity for virtual machines.
 
   * Layer 2 services include provisioning of virtual networks and tunnels.
@@ -39,8 +37,7 @@ The picture from the OpenStack offical website describes typical deployment with
 
 Note: With Mirantis OpenStack, network node and controller node combined to controller node
 
-![openstack_architecture]
-(http://docs.openstack.org/security-guide/_images/1aa-network-domains-diagram.png)
+![687474703a2f2f646f63732e6f70656e737461636b2e6f72672f73656375726974792d67756964652f5f696d616765732f3161612d6e6574776f726b2d646f6d61696e732d6469616772616d2e706e67.png](/uploads/687474703a2f2f646f63732e6f70656e737461636b2e6f72672f73656375726974792d67756964652f5f696d616765732f3161612d6e6574776f726b2d646f6d61696e732d6469616772616d2e706e67.png)
 
 ### 2. How neutron works under XenServer
 
@@ -71,21 +68,20 @@ OpenStack tenant can define their own L2 private network allowing IP overlap.
 
 * Internal network:
 
-  * OpenStack Management network: This is targeted for openstack management, it's used
-    to access OpenStack services, can be tagged or untagged vlan network.
+  * OpenStack Management network: This is targeted for OpenStack management, it's used to access OpenStack services, can be tagged or untagged VLAN network.
 
   * Storage network: This is used to provide storage services such as replication traffic
-    from Ceph, can tagged or untagged vlan network.
+    from Ceph, can tagged or untagged VLAN network.
 
-  * Fuel Admin(PXE) network: This is used fro creating and booting new nodes.
+  * Fuel Admin(PXE) network: This is used for creating and booting new nodes.
     All controller and compute nodes will boot from this PXE network and will get
     its IP address via Fuel's internal dhcp server.
 
-![mos_xs_net_topo](https://github.com/Annie-XIE/summary-os/blob/master/pic/MOS-XS-net-topo.png)
+![MOS-XS-net-topo.png](/uploads/MOS-XS-net-topo.png)
 
 #### 2.2 Traffic flow
 
-In this section, we will deeply go through on North-South/East-West traffic, explain the OVS rules underly.
+In this section, we will deeply go through on North-South/East-West traffic and explain the OVS rules supporting the traffic.
 
 * North-South network traffic: Traffic between VMs and the external network, e.g. Internet.
 
@@ -97,13 +93,13 @@ In the above section, we have introduced different networks used in OpenStack cl
 Let's assume VM1 with fixed IP: 192.168.30.4, floating IP: 10.71.17.81,
 when VM1 ping www.google.com, how the traffic goes.
 
-![north-south](https://github.com/Annie-XIE/summary-os/blob/master/pic/north-south-traffic-mark.png)
+![north-south-traffic-mark.png](/uploads/north-south-traffic-mark.png)
 
 * In compute node:
 
 Step-1. VM1(eth1) sent packet out through port `tap`
 
-Step-2. Seruity group rules on Linux bridge `qbr` handle firwalling and
+Step-2. Security group rules on Linux bridge `qbr` handle firewalling and
 stack tracking for the packages
 
 Step-3. VM1's packages arrived port `qvo`, `internal tag 16` will be added to the packages
@@ -162,7 +158,7 @@ Step-6. VM1's packages with `internal tag 6` went into virtual router `qr`
         192.168.30.0    *               255.255.255.0   U     0      0        0 qr-4742c3a4-a5
 
 `qr` locates in linux network namespace, it's used for routing within
-tenant private network. VM1's packeges were with fixed IP 192.168.30.4
+tenant private network. VM1's packages were with fixed IP 192.168.30.4
 at the moment, from the above route table, we can see it's `qr-4742c3a4-a5`.
 
 Step-7. VM1' packages were SNAT and went out via gateway `qg` within namespace
@@ -208,19 +204,18 @@ depending on where the VMs residing and whether the VMs belonging to the same te
 
 In this scenario, traffic from VM1 to VM2, only need the integration bridge in compute node.
 
-![east-west](https://github.com/Annie-XIE/summary-os/blob/master/pic/East-West-traffic-mark-1.png)
+![East-West-traffic-mark-1.png](/uploads/East-West-traffic-mark-1.png)
 
 * Scenario2: VM1 and VM3 locate in different hosts, belong to the same tenant network and same subnet
 
 In this scenario, traffic from VM1 to VM3 need the physical VLAN network, no network node functionality needed
 
-![east-west](https://github.com/Annie-XIE/summary-os/blob/master/pic/East-West-traffic-mark-2.png)
+![East-West-traffic-mark-2.png](/uploads/East-West-traffic-mark-2.png)
 
 * Scenario3: Others, e.g. VM1 and VM3 with different tenant network
 
-![east-west](https://github.com/Annie-XIE/summary-os/blob/master/pic/East-West-traffic-mark-3.png)
+![East-West-traffic-mark-3.png](/uploads/East-West-traffic-mark-3.png)
 
 ### 3. Future
 
-Looking forward, we will implement VxLAN and GRE network, also enrich more neutron features,
-such as VPNaaS, LBaaS, FWaaS, SDN ...
+Looking forward, we will implement VxLAN and GRE network, also enrich more neutron features, such as VPNaaS, LBaaS, FWaaS, SDN ...
