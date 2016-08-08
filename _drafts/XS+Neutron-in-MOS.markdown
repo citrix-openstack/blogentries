@@ -3,13 +3,11 @@ title: XenServer + Neutron in Mirantis OpenStack
 date: 2016-08-08 14:26:00 Z
 ---
 
-Mirantis OpenStack is the most popular distribution in IaaS area and
-has 100+ enterprise customers.
-XenServer as the leading open source virtualization platform, has released
-its offical [Fuel](https://wiki.openstack.org/wiki/Fuel) plugin based on Mirantis
-OpenStack 8.0, which integrates neturon and provides neutron VLAN support first time.
-You can download our plugin from 
-[mirantis fuel plugin](https://www.mirantis.com/validated-solution-integrations/fuel-plugins/) page.
+Mirantis OpenStack is a highly popular OpenStack distribution and Citrix has released
+an official XenServer [Fuel](https://wiki.openstack.org/wiki/Fuel) plugin based on Mirantis
+OpenStack 8.0, which integrates with Neutron for the first time.
+You can download our plugin from the
+[Mirantis fuel plugin](https://www.mirantis.com/validated-solution-integrations/fuel-plugins/) page.
 
 
 In this blog, I will focus on network part since neutron project is introduced in
