@@ -1,6 +1,7 @@
 ---
 title: XenServer + Neutron in Mirantis OpenStack
 date: 2016-08-08 14:26:00 Z
+published: false
 ---
 
 Mirantis OpenStack is a highly popular OpenStack distribution and Citrix has released
