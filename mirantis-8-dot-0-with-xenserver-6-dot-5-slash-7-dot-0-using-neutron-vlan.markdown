@@ -3,43 +3,30 @@ title: Mirantis 8.0 with XenServer 6.5/7.0 using Neutron VLAN
 date: 2016-08-09 01:46:00 Z
 ---
 
-Mirantis OpenStack is the most popular distribution in IaaS area and
-has 100+ enterprise customers.
-XenServer as the leading open source virtualization platform, has released
-its offical [Fuel](https://wiki.openstack.org/wiki/Fuel) plugin based on Mirantis
-OpenStack 8.0, which integrates neturon and provides neutron VLAN support first time.
-You can download our plugin from 
-[mirantis fuel plugin](https://www.mirantis.com/validated-solution-integrations/fuel-plugins/) page.
+Mirantis OpenStack is the most popular distribution in IaaS area and has 100\+ enterprise customers. XenServer as the leading open source virtualization platform, has released its offical [Fuel](https://wiki.openstack.org/wiki/Fuel) plugin based on Mirantis OpenStack 8.0, which integrates neturon and provides neutron VLAN support first time. You can download our plugin from [mirantis fuel plugin](https://www.mirantis.com/validated-solution-integrations/fuel-plugins/) page.
 
-
-In this blog, I will focus on network part since neutron project is introduced in
-XenServer Fuel plugin for the first time. For basic Mirantis OpenStack, Mirantis Fuel
-and XenServer introduction, you can refer previous
-[blog post](https://github.com/citrix-openstack/blogentries/blob/master/Introduction_To_XenServer_Fuel_Plugin.md).
+In this blog, I will focus on network part since neutron project is introduced in XenServer Fuel plugin for the first time. For basic Mirantis OpenStack, Mirantis Fuel and XenServer introduction, you can refer previous [blog post](https://github.com/citrix-openstack/blogentries/blob/master/Introduction_To_XenServer_Fuel_Plugin.md).
 
 ### 1. Neutron brief
 
-Basically Neutron is an OpenStack project which provides "networking as a service" (NaaS)
-with code-name Neutron. It's a standalone service alongside other services such as Nova (compute), 
-Glance (image), Cinder (storage). It provides high level abstraction of network resources,
-such as network, subnet, port, router, etc. Further it enforces SDN, delegating its implementation
-and functionalities to the plugin, which is not possible in nova-network.
+Basically Neutron is an OpenStack project which provides "networking as a service" (NaaS) with code-name Neutron. It's a standalone service alongside other services such as Nova (compute), Glance (image), Cinder (storage). It provides high level abstraction of network resources, such as network, subnet, port, router, etc. Further it enforces SDN, delegating its implementation and functionalities to the plugin, which is not possible in nova-network.
 
 The picture from OpenStack offical website describes typical deployment with Neutron.
 
-* Controller node: Provide management functions, such as API servers and scheduling
-services for Nova, Neutron, Glance and Cinder. It's the central part where most standard
-OpenStack services and tools run.
-* Network node: Provide network sevices, runs networking plug-in, layer 2 agent,
-and several layer 3 agents. Handles external connectivity for virtual machines.
-    * Layer 2 services include provisioning of virtual networks and tunnels. 
-    * Layer 3 services include routing, NAT, and DHCP.
+* Controller node: Provide management functions, such as API servers and scheduling services for Nova, Neutron, Glance and Cinder. It's the central part where most standard OpenStack services and tools run.
+
+* Network node: Provide network sevices, runs networking plug-in, layer 2 agent, and several layer 3 agents. Handles external connectivity for virtual machines.
+
+  * Layer 2 services include provisioning of virtual networks and tunnels.
+
+  * Layer 3 services include routing, NAT, and DHCP.
+
 * Compute node: Provide computing service, it manages the hypervisors and virtual machines.
 
 Note: With Mirantis OpenStack, network node and controller node combined to controller node
 
-![openstack_architecture]
-(http://docs.openstack.org/security-guide/_images/1aa-network-domains-diagram.png)
+!\[openstack_architecture\]
+\(http://docs.openstack.org/security-guide/_images/1aa-network-domains-diagram.png)
 
 ### 2. How neutron works under XenServer
 
@@ -56,26 +43,21 @@ With Mirantis OpenStack, there are several networks involved.
         OpenStack Storage network (br-storage)
         Fuel Admin(PXE) network (br-fw-admin)
 
-* OpenStack Public network (br-ex): 
+* OpenStack Public network (br-ex):
 
-This network should be represented as tagged or untagged isolated L2 network
-segment. Servers for external API access and providing VMs with connectivity
-to/from networking outside the cloud. Floating IPs are implemented with L3
-agent + NAT rules on Controller nodes
+This network should be represented as tagged or untagged isolated L2 network segment. Servers for external API access and providing VMs with connectivity to/from networking outside the cloud. Floating IPs are implemented with L3 agent \+ NAT rules on Controller nodes
 
 * Private network (br-prv):
 
-This is for traffics from/to tenant VMS. Under XenServer, we use OpenvSwitch VLAN (802.1q). 
-OpenStack tenant can define their own L2 private network allowing IP overlap.
+This is for traffics from/to tenant VMS. Under XenServer, we use OpenvSwitch VLAN (802.1q). OpenStack tenant can define their own L2 private network allowing IP overlap.
 
 * Internal network:
-    * OpenStack Management network: This is targeted for openstack management, it's used
-to access OpenStack services, can be tagged or untagged vlan network.
-    * Storage network: This is used to provide storage services such as replication traffic
-  from Ceph, can tagged or untagged vlan network.
-    * Fuel Admin(PXE) network: This is used fro creating and booting new nodes.
-All controller and compute nodes will boot from this PXE network and will get
-its IP address via Fuel's internal dhcp server.
+
+  * OpenStack Management network: This is targeted for openstack management, it's used to access OpenStack services, can be tagged or untagged vlan network.
+
+  * Storage network: This is used to provide storage services such as replication traffic from Ceph, can tagged or untagged vlan network.
+
+  * Fuel Admin(PXE) network: This is used fro creating and booting new nodes. All controller and compute nodes will boot from this PXE network and will get its IP address via Fuel's internal dhcp server.
 
 ![mos_xs_net_topo](https://github.com/Annie-XIE/summary-os/blob/master/pic/MOS-XS-net-topo.png)
 
@@ -89,9 +71,7 @@ In this section, we will deeply go through on North-South/East-West traffic, exp
 
 ##### 2.2.1 North-South network traffic
 
-In the above section, we have introduced different networks used in OpenStack cloud.
-Let's assume VM1 with fixed IP: 192.168.30.4, floating IP: 10.71.17.81,
-when VM1 ping www.google.com, how the traffic goes.
+In the above section, we have introduced different networks used in OpenStack cloud. Let's assume VM1 with fixed IP: 192.168.30.4, floating IP: 10.71.17.81, when VM1 ping www.google.com, how the traffic goes.
 
 ![north-south](https://github.com/Annie-XIE/summary-os/blob/master/pic/north-south-traffic-mark.png)
 
@@ -99,8 +79,7 @@ when VM1 ping www.google.com, how the traffic goes.
 
 Step-1. VM1(eth1) sent packet out through port `tap`
 
-Step-2. Seruity group rules on Linux bridge `qbr` handle firwalling and
-stack tracking for the packages
+Step-2. Seruity group rules on Linux bridge `qbr` handle firwalling and stack tracking for the packages
 
 Step-3. VM1's packages arrived port `qvo`, `internal tag 16` will be added to the packages
 
@@ -113,16 +92,13 @@ Step-3. VM1's packages arrived port `qvo`, `internal tag 16` will be added to th
             tag: 16
             Interface "qvof5602d85-2e"
 
-Step-4. VM1's package arrived port `int-br-prv` triggering openflow rules, 
-`internal tag 16` was changed to `physical VLAN 1173`.
+Step-4. VM1's package arrived port `int-br-prv` triggering openflow rules, `internal tag 16` was changed to `physical VLAN 1173`.
 
         cookie=0x0, duration=12104.028s, table=0, n_packets=257, n_bytes=27404, idle_age=88, priority=4,in_port=7,dl_vlan=16 actions=mod_vlan_vid:1173,NORMAL
 
 * In network node:
 
-Step-5. VM1's packages went through physical VLAN network to
-network node bridge `br-int` via port `int-br-prv` triggering
-openflow rules, changing `physical VLAN 1173` to `internal tag 6`.
+Step-5. VM1's packages went through physical VLAN network to network node bridge `br-int` via port `int-br-prv` triggering openflow rules, changing `physical VLAN 1173` to `internal tag 6`.
 
       Bridge br-int        
         Port int-br-prv
@@ -157,9 +133,7 @@ Step-6. VM1's packages with `internal tag 6` went into virtual router `qr`
         10.71.16.0      *               255.255.254.0   U     0      0        0 qg-1270ddd4-bb
         192.168.30.0    *               255.255.255.0   U     0      0        0 qr-4742c3a4-a5
 
-`qr` locates in linux network namespace, it's used for routing within
-tenant private network. VM1's packeges were with fixed IP 192.168.30.4
-at the moment, from the above route table, we can see it's `qr-4742c3a4-a5`.
+`qr` locates in linux network namespace, it's used for routing within tenant private network. VM1's packeges were with fixed IP 192.168.30.4 at the moment, from the above route table, we can see it's `qr-4742c3a4-a5`.
 
 Step-7. VM1' packages were SNAT and went out via gateway `qg` within namespace
 
@@ -197,8 +171,7 @@ For package back from external network to VM, vice versa.
 
 ##### 2.2.2 East-West network traffic
 
-When talking about East-West traffic, the packages route will quite different
-depending on where the VMs residing and whether the VMs belonging to the same tenant.
+When talking about East-West traffic, the packages route will quite different depending on where the VMs residing and whether the VMs belonging to the same tenant.
 
 * Scenario1: VM1 and VM2 locate in the same host, belong to the same tenant network and same subnet
 
@@ -218,5 +191,4 @@ In this scenario, traffic from VM1 to VM3 need the physical VLAN network, no net
 
 ### 3. Future
 
-Looking forward, we will implement VxLAN and GRE network, also enrich more neutron features,
-such as VPNaaS, LBaaS, FWaaS, SDN ...
+Looking forward, we will implement VxLAN and GRE network, also enrich more neutron features, such as VPNaaS, LBaaS, FWaaS, SDN ...
