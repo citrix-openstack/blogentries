@@ -200,17 +200,24 @@ For package back from external network to VM, vice versa.
 When talking about East-West traffic, the packages route will quite different
 depending on where the VMs residing and whether the VMs belonging to the same tenant.
 
-![neutron-east-west.png](/uploads/neutron-east-west.png)
+![neutron-east-west-pic.png](/uploads/neutron-east-west-pic.png)
 
-* Scenario1: VM1 and VM2 locate in the same host, belong to the same tenant network and same subnet
+* Scenario1: VM1 and VM2 belong to same tenant, locate in the same host, attached to the same tenant network
 
 In this scenario, traffic from VM1 to VM2, only need to go through the integration bridge br-int in Host1's Dom0.
 
-* Scenario2: VM1 and VM3 locate in different hosts, belong to the same tenant network and same subnet
+* Scenario2: VM1 and VM3 belong to same tenant, locate in different hosts, attached to the same tenant network
 
-In this scenario, traffic from VM1 to VM3 need the physical VLAN network,  eth0(VM1) -> vif5.0 -> qbr -> br-int -> br-prv (Host1 Dom0) -> physical VLAN -> br-prv -> br-int -> qbr -> vif11.0 (Host2 Dom0) -> eth0 (VM3), no network node functionality needed
+In this scenario, traffic from VM1 to VM3 will go through from Host1(Dom0) via physical VLAN network to Host2(Dom0), no network node involved
 
-* Scenario3: Others, e.g. VM1 and VM4 with different tenant network, the it should use the floating IP to communicate with each others and Network Node is invoved. 
+* Scenario3: VM1 and VM4 belong to the same tenant, locat in different hosts, attached to different tenant network
+
+In this scenario, traffic from V1 to VM3 will go through from Host1(Dom0) via physical VLAN network to Network Node and routed by `qg` and `qr` then to Host2(Dom0), then it will arrived to eth0 VM3 finally.
+
+* Scenraio4: VM1 and VM5 belong to different tenant
+
+In this scenario, traffic from VM1 to VM? will be much more complicated, Network Node
+will be involved and also VMs can only communicate via floating IP.
 
 ### 3. Future
 
