@@ -22,8 +22,7 @@ and functionalities to the plugin, which is not possible in nova-network.
 The picture from the OpenStack official website describes typical deployment with Neutron.
 
 * Controller node: Provide management functions, such as API servers and scheduling
-  services for Nova, Neutron, Glance and Cinder. It's the central part where most standard
-  OpenStack services and tools run.
+  services for Nova, Neutron, Glance and Cinder. It's the central part where most standard OpenStack services and tools run.
 
 * Network node: Provide network services, runs networking plug-in, layer 2 agent,
   and several layer 3 agents. Handles external connectivity for virtual machines.
@@ -62,17 +61,17 @@ agent \+ NAT rules on Controller nodes
 
 * Private network (br-prv):
 
-This is for traffics from/to tenant VMS. Under XenServer, we use OpenvSwitch VLAN (802.1q).
+This is for traffics from/to tenant VMs. Under XenServer, we use OpenvSwitch VLAN (802.1q).
 OpenStack tenant can define their own L2 private network allowing IP overlap.
 
 * Internal network:
 
-  * OpenStack Management network: This is targeted for OpenStack management, it's used to access OpenStack services, can be tagged or untagged VLAN network.
+  * OpenStack Management network (br-mgmt): This is targeted for OpenStack management, it's used to access OpenStack services, can be tagged or untagged VLAN network.
 
-  * Storage network: This is used to provide storage services such as replication traffic
+  * OpenStack Storage network (br-storage): This is used to provide storage services such as replication traffic
     from Ceph, can tagged or untagged VLAN network.
 
-  * Fuel Admin(PXE) network: This is used for creating and booting new nodes.
+  * Fuel Admin(PXE) network (br-fw-admin): This is used for creating and booting new nodes.
     All controller and compute nodes will boot from this PXE network and will get
     its IP address via Fuel's internal dhcp server.
 
@@ -88,11 +87,13 @@ In this section, we will deeply go through on North-South/East-West traffic and 
 
 ##### 2.2.1 North-South network traffic
 
+Before discussing the network traffic, let's see the main differences that
+
+![neutron-vlan-v2.png](/uploads/neutron-vlan-v2-c30545.png)
+
 In the above section, we have introduced different networks used in OpenStack cloud.
 Let's assume VM1 with fixed IP: 192.168.30.4, floating IP: 10.71.17.81,
 when VM1 ping www.google.com, how the traffic goes.
-
-![north-south-traffic-mark.png](/uploads/north-south-traffic-mark.png)
 
 * In compute node:
 
@@ -199,21 +200,17 @@ For package back from external network to VM, vice versa.
 When talking about East-West traffic, the packages route will quite different
 depending on where the VMs residing and whether the VMs belonging to the same tenant.
 
+![neutron-east-west.png](/uploads/neutron-east-west.png)
+
 * Scenario1: VM1 and VM2 locate in the same host, belong to the same tenant network and same subnet
 
-In this scenario, traffic from VM1 to VM2, only need the integration bridge in compute node.
-
-![East-West-traffic-mark-1.png](/uploads/East-West-traffic-mark-1.png)
+In this scenario, traffic from VM1 to VM2, only need to go through the integration bridge br-int in Host1's Dom0.
 
 * Scenario2: VM1 and VM3 locate in different hosts, belong to the same tenant network and same subnet
 
-In this scenario, traffic from VM1 to VM3 need the physical VLAN network, no network node functionality needed
+In this scenario, traffic from VM1 to VM3 need the physical VLAN network,  eth0(VM1) -> vif5.0 -> qbr -> br-int -> br-prv (Host1 Dom0) -> physical VLAN -> br-prv -> br-int -> qbr -> vif11.0 (Host2 Dom0) -> eth0 (VM3), no network node functionality needed
 
-![East-West-traffic-mark-2.png](/uploads/East-West-traffic-mark-2.png)
-
-* Scenario3: Others, e.g. VM1 and VM3 with different tenant network
-
-![East-West-traffic-mark-3.png](/uploads/East-West-traffic-mark-3.png)
+* Scenario3: Others, e.g. VM1 and VM4 with different tenant network, the it should use the floating IP to communicate with each others and Network Node is invoved. 
 
 ### 3. Future
 

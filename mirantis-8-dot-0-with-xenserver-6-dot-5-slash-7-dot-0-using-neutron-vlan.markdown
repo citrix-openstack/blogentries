@@ -71,9 +71,11 @@ In this section, we will deeply go through on North-South/East-West traffic, exp
 
 ##### 2.2.1 North-South network traffic
 
-In the above section, we have introduced different networks used in OpenStack cloud. Let's assume VM1 with fixed IP: 192.168.30.4, floating IP: 10.71.17.81, when VM1 ping www.google.com, how the traffic goes.
+The major difference when using XenServer as hypervisor is that it has the privileged domain, dom0. When booting a VM, the VM's NIC (virtual NIC) is acutally the frontend, dom0 manages its backend known as VIF, so regarding the VM's NIC and traffic, dom0 will be involved of course.  As you can see from the below picture, the neutron-ovs-agent runs in comput node (the unprivileged domain, domU), but the ovs it controls actually resides in dom0.
 
-![north-south](https://github.com/Annie-XIE/summary-os/blob/master/pic/north-south-traffic-mark.png)
+Let's assume VM1 with fixed IP: 192.168.30.4, floating IP: 10.71.17.81,  then check how the traffic goes when VM1 ping www.google.com.
+
+![neutron-vlan-v2-c30545.png](/uploads/neutron-vlan-v2-c30545.png)
 
 * In compute node:
 
@@ -177,13 +179,13 @@ When talking about East-West traffic, the packages route will quite different de
 
 In this scenario, traffic from VM1 to VM2, only need the integration bridge in compute node.
 
-![east-west](https://github.com/Annie-XIE/summary-os/blob/master/pic/East-West-traffic-mark-1.png)
+![neutron-east-west-same-vlan-same-host.png](/uploads/neutron-east-west-same-vlan-same-host.png)
 
 * Scenario2: VM1 and VM3 locate in different hosts, belong to the same tenant network and same subnet
 
 In this scenario, traffic from VM1 to VM3 need the physical VLAN network, no network node functionality needed
 
-![east-west](https://github.com/Annie-XIE/summary-os/blob/master/pic/East-West-traffic-mark-2.png)
+![neutron-vlan-same-vlan-diff-host.png](/uploads/neutron-vlan-same-vlan-diff-host.png)
 
 * Scenario3: Others, e.g. VM1 and VM3 with different tenant network
 
