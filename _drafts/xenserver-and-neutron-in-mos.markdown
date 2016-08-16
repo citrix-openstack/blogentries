@@ -72,8 +72,7 @@ OpenStack tenant can define their own L2 private network allowing IP overlap.
     from Ceph, can tagged or untagged VLAN network.
 
   * Fuel Admin(PXE) network (br-fw-admin): This is used for creating and booting new nodes.
-    All controller and compute nodes will boot from this PXE network and will get
-    its IP address via Fuel's internal dhcp server.
+    All controller and compute nodes will boot from this PXE network and will get its IP address via Fuel's internal dhcp server.
 
 ![MOS-XS-net-topo.png](/uploads/MOS-XS-net-topo.png)
 
@@ -87,11 +86,10 @@ In this section, we will deeply go through on North-South/East-West traffic and 
 
 ##### 2.2.1 North-South network traffic
 
-Before discussing the network traffic, let's see the main differences that
+The major difference when using XenServer as hypervisor under OpenStack is that it has the privileged domain, dom0. When booting a VM, the VM's NIC (virtual NIC) is acutally the frontend, dom0 manages its backend known as VIF, so regarding the VM's NIC and traffic, dom0 will be involved of course.  As you can see from the below picture, the neutron-ovs-agent runs in comput node (the unprivileged domain, domU), but the ovs it controls actually resides in dom0.
 
 ![neutron-vlan-v2.png](/uploads/neutron-vlan-v2-c30545.png)
 
-In the above section, we have introduced different networks used in OpenStack cloud.
 Let's assume VM1 with fixed IP: 192.168.30.4, floating IP: 10.71.17.81,
 when VM1 ping www.google.com, how the traffic goes.
 
@@ -100,7 +98,7 @@ when VM1 ping www.google.com, how the traffic goes.
 Step-1. VM1(eth1) sent packet out through port `tap`
 
 Step-2. Security group rules on Linux bridge `qbr` handle firewalling and
-stack tracking for the packages
+state tracking for the packages
 
 Step-3. VM1's packages arrived port `qvo`, `internal tag 16` will be added to the packages
 
@@ -206,19 +204,22 @@ depending on where the VMs residing and whether the VMs belonging to the same te
 
 In this scenario, traffic from VM1 to VM2, only need to go through the integration bridge br-int in Host1's Dom0.
 
-* Scenario2: VM1 and VM3 belong to same tenant, locate in different hosts, attached to the same tenant network
+* Scenario2: VM1 and VM3 belong to same tenant, located in different hosts, attached to the same tenant network
 
 In this scenario, traffic from VM1 to VM3 will go through from Host1(Dom0) via physical VLAN network to Host2(Dom0), no network node involved
 
-* Scenario3: VM1 and VM4 belong to the same tenant, locat in different hosts, attached to different tenant network
+* Scenario3: VM1 and VM4 belong to the same tenant, located in different hosts, attached to different tenant network
 
 In this scenario, traffic from V1 to VM3 will go through from Host1(Dom0) via physical VLAN network to Network Node and routed by `qg` and `qr` then to Host2(Dom0), then it will arrived to eth0 VM3 finally.
 
 * Scenraio4: VM1 and VM5 belong to different tenant
 
-In this scenario, traffic from VM1 to VM? will be much more complicated, Network Node
-will be involved and also VMs can only communicate via floating IP.
+In this scenario, traffic from VM1 to VM5 will be much more complicated, the Network Node will be involved and also VMs can only communicate via floating IP.
 
 ### 3. Future
 
-Looking forward, we will implement VxLAN and GRE network, also enrich more neutron features, such as VPNaaS, LBaaS, FWaaS, SDN ...
+Currently the Neutron integration with XenServer requires allocation of VLANs specifically for the Neutron networks.  Neutron can work with tunnels to remove the need for this VLAN allocation, and as XenServer has a recent version of OVS in dom0, supporting VxLAN or using GRE tunnels should be possible.
+
+We'll also be improving the Neutron integration to use the native OVS python libraries rather than ovs-vsctl commands, which should give a major performance boost to the control plane.
+
+Watch out for more updates soon!
