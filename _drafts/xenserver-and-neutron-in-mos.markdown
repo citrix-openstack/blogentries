@@ -78,13 +78,9 @@ OpenStack tenant can define their own L2 private network allowing IP overlap.
 
 #### 2.2 Traffic flow
 
-In this section, we will deeply go through on North-South/East-West traffic and explain the OVS rules supporting the traffic.
+In this section, we will explain how traffic goes from VM to external network and traffic between VMs. Also explain the OVS rules supporting these behavior.
 
-* North-South network traffic: Traffic between VMs and the external network, e.g. Internet.
-
-* East-West network traffic: Traffic between VMs.
-
-##### 2.2.1 North-South network traffic
+##### 2.2.1 Traffic from VM to external network
 
 The major difference when using XenServer as hypervisor under OpenStack is that it has the privileged domain, dom0. When booting a VM, the VM's NIC (virtual NIC) is acutally the frontend, dom0 manages its backend known as VIF, so regarding the VM's NIC and traffic, dom0 will be involved of course.  As you can see from the below picture, the neutron-ovs-agent runs in comput node (the unprivileged domain, domU), but the ovs it controls actually resides in dom0.
 
@@ -193,10 +189,11 @@ Step-8. VM1's packages finally went out through br-ex, see the physical route
 
 For package back from external network to VM, vice versa.
 
-##### 2.2.2 East-West network traffic
+##### 2.2.2 Traffic between VMs
 
-When talking about East-West traffic, the packages route will quite different
-depending on where the VMs residing and whether the VMs belonging to the same tenant.
+When talking about traffic between VMs, the actual packages' routes will differ a lot depending on where the VMs residing and whether the VMs belonging to the same tenant. In our case, my environment use neutron VLAN which has the ability of network isolation, so even VMs belonging to the same tenant, if they are attached to different network, they cannot communicate to each other directly unless you let them connected to the same virtual router.
+
+![network-topy-1.PNG](/uploads/network-topy-1.PNG)
 
 ![neutron-east-west-pic.png](/uploads/neutron-east-west-pic.png)
 
@@ -208,13 +205,15 @@ In this scenario, traffic from VM1 to VM2, only need to go through the integrati
 
 In this scenario, traffic from VM1 to VM3 will go through from Host1(Dom0) via physical VLAN network to Host2(Dom0), no network node involved
 
-* Scenario3: VM1 and VM4 belong to the same tenant, located in different hosts, attached to different tenant network
+* Scenario3: VM1 and VM4 belong to the same tenant, attached to different tenant network
 
-In this scenario, traffic from V1 to VM3 will go through from Host1(Dom0) via physical VLAN network to Network Node and routed by `qg` and `qr` then to Host2(Dom0), then it will arrived to eth0 VM3 finally.
+  * If the two networks not attached to the same virtual router, VM1 and VM4 cannot connect to each other
 
-* Scenraio4: VM1 and VM5 belong to different tenant
+  * If the two networks attached to the same virtual router, VM1 and VM can connect to each other via network node L3 service
 
-In this scenario, traffic from VM1 to VM5 will be much more complicated, the Network Node will be involved and also VMs can only communicate via floating IP.
+* Scenraio4: VMs belong to different tenants
+
+In this scenario, VMs cannot communicate with each other via fixed IP, they can only communicate with each other by floating IP.
 
 ### 3. Future
 
