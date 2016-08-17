@@ -12,7 +12,7 @@ tags:
 In the world of virtualization especially QEMU, a L2 network interface is
 emulated with a virtual network kernel device called "tap device", while
 XenServer introduces Virtual Network Interfaces (vif) devices in paravirtualized
-(PV) way, which means guest OS kernel is aware it is running on a virtual
+\(PV) way, which means guest OS kernel is aware it is running on a virtual
 machine and it doesn't have to fully emulate a real network device so network
 communications will be fast and efficient.
 
@@ -39,40 +39,49 @@ comparing the conditions with and without this bridge.
   all guest instances are connected to provide connectivity to an external
   network with a physical network interface. This is essentially the same as the
   nova-network used to connect VMs to a physical interface.
+
 * 'interim bridges': Mentioned as "VIF specific bridges" in above paragraph,
   interim bridges work between the HVM guests and the integration bridge. There
   is one separate interim bridge for each HVM guest.
+
 * 'Patch ports': A pair of virtual devices that act as a patch cable to connect
   multiple Open vSwitch (OVS) bridges (e.g. the integration bridge and interim
   bridge)
+
 * 'ovs-vsctl': A CLI high-level tool to for querying and configuring Open
   vSwitch daemon. Everything we will do to Open vSwitch will be performed by
   ovs-vsctl.
+
 * 'iperf': A commonly-used network testing tool that can create TCP/UDP data
   streams and measure the throughput of a network. iperf works at a Client/
   Server mode.
+
 * 'gnuplot': A command-line program can generate plot diagrams.
 
 # Environment setup
 
-![interim bridge](interim.png?raw=true)
+![interim.png](/uploads/interim.png)
 
 We follow below steps to set up two environments like above in a fresh XenServer host.
 
-+ Firstly create two private networks serve as “integration bridge” and "interim
+* Firstly create two private networks serve as “integration bridge” and "interim
   bridge"
-+ Create two guest instances A and B. One is Centos 7 with guest tool installed
+
+* Create two guest instances A and B. One is Centos 7 with guest tool installed
   so it will be in HVM mode while using vif, another is a Centos 6 with the
-  template "Other install media" so it will be HVM+TAP
-+ Create a guest instance S services as the packets send, preferably also using
+  template "Other install media" so it will be HVM\+TAP
+
+* Create a guest instance S services as the packets send, preferably also using
   vif.
-+ Install iperf on instances A, B and S
-+ Connect instance S to "integration bridge" and set the entry port as a trunk
+
+* Install iperf on instances A, B and S
+
+* Connect instance S to "integration bridge" and set the entry port as a trunk
   port with vlan 10. A sample command could be:
 
       ovs-vsctl set port <S_VIF> trunks=10
 
-+ Create a static IP address and a tagged eth for instance S
+* Create a static IP address and a tagged eth for instance S
 
         ip link add link eth1 name eth1.10 type vlan id 10
         ip a add dev eth1.10 10.0.0.3/24
@@ -80,13 +89,17 @@ We follow below steps to set up two environments like above in a fresh XenServer
 
 Now we have an common environment can be used for two conditions.
 
-# Without interim bridge + patch ports
+# Without interim bridge \+ patch ports
 
-+ Connect instances A(hvm-tap) and B(hvm-vif) to “integration bridge”
-+ Create static IP addresses for instances A and B
-+ Tag tap or vif for instances A and B
-+ Test connectivity between each instance
-+ Run below command to test the throughput for S->A and S->B and save the data
+* Connect instances A(hvm-tap) and B(hvm-vif) to “integration bridge”
+
+* Create static IP addresses for instances A and B
+
+* Tag tap or vif for instances A and B
+
+* Test connectivity between each instance
+
+* Run below command to test the throughput for S->A and S->B and save the data
   for analysis
 
         ssh root@$VM_S "nohup iperf -s &> /dev/null &"
@@ -102,11 +115,12 @@ Now we have an common environment can be used for two conditions.
         done
         ssh root@$VM_S "pkill iperf"
 
-# With interim bridge + patch ports
+# With interim bridge \+ patch ports
 
-+ Reconnect instances A(hvm-tap) and B(hvm-vif) to "interim bridge” (rebooting
+* Reconnect instances A(hvm-tap) and B(hvm-vif) to "interim bridge” (rebooting
   required)
-+ Create a pair of patch ports connected to both of “integration bridge” and
+
+* Create a pair of patch ports connected to both of “integration bridge” and
   "interim bridge”. Assuming those two bridges in OVS are represented as xapi1
   and xapi2, the sample commands could be:
 
@@ -117,8 +131,9 @@ Now we have an common environment can be used for two conditions.
         ovs-vsctl set interface patch-to-xapi2 options:peer=patch-to-xapi1
         ovs-vsctl set interface patch-to-xapi1 options:peer=patch-to-xapi2
 
-+ Recreate static IP addresses for instances A and B
-+ Run below command again to test the throughput and save the data
+* Recreate static IP addresses for instances A and B
+
+* Run below command again to test the throughput and save the data
 
         ssh root@$VM_S "nohup iperf -s &> /dev/null &"
         for i in `seq 0 9`; do
@@ -150,7 +165,7 @@ device
     "singlebr-tap.data" u 1:2 t "singlebr-tap" w lp ls 1, \
     "patchport-tap.data" u 1:2 t "patchport-tap" w lp ls 2
     EOF
-
+    
     gnuplot <<EOF
     set term png giant enhanced size 1000, 800
     set output "vif-throughputs.png"
@@ -166,103 +181,22 @@ device
 # Test result
 
 Shown as below, the test result proves that the performance of vif and tap
-device will be both just slightly impacted with interim bridge + patch ports.
+device will be both just slightly impacted with interim bridge \+ patch ports.
 
-<table>
-        <tbody>
-            <tr>
-                <td class="confluenceTd"><span>(Mb/s)</span></td>
-                <td class="confluenceTd">singlebr-tap</td>
-                <td class="confluenceTd">patchport-tap</td>
-                <td class="confluenceTd">singlebr-vif</td>
-                <td class="confluenceTd">patchport-vif</td>
-            </tr>
-            <tr>
-                <td class="confluenceTd">0</td>
-                <td class="confluenceTd">116</td>
-                <td class="confluenceTd">124</td>
-                <td class="confluenceTd">5145</td>
-                <td class="confluenceTd">4968</td>
-            </tr>
-            <tr>
-                <td class="confluenceTd">1</td>
-                <td class="confluenceTd">115</td>
-                <td class="confluenceTd">117</td>
-                <td class="confluenceTd">5182</td>
-                <td class="confluenceTd">5090</td>
-            </tr>
-            <tr>
-                <td class="confluenceTd">2</td>
-                <td class="confluenceTd">121</td>
-                <td class="confluenceTd">120</td>
-                <td class="confluenceTd">5001</td>
-                <td class="confluenceTd">5082</td>
-            </tr>
-            <tr>
-                <td class="confluenceTd">3</td>
-                <td class="confluenceTd">117</td>
-                <td class="confluenceTd">122</td>
-                <td class="confluenceTd">5307</td>
-                <td class="confluenceTd">5226</td>
-            </tr>
-            <tr>
-                <td class="confluenceTd">4</td>
-                <td class="confluenceTd">128</td>
-                <td class="confluenceTd">123</td>
-                <td class="confluenceTd">4976</td>
-                <td class="confluenceTd">5216</td>
-            </tr>
-            <tr>
-                <td class="confluenceTd">5</td>
-                <td class="confluenceTd">127</td>
-                <td class="confluenceTd">121</td>
-                <td class="confluenceTd">5236</td>
-                <td class="confluenceTd">4942</td>
-            </tr>
-            <tr>
-                <td class="confluenceTd">6</td>
-                <td class="confluenceTd">126</td>
-                <td class="confluenceTd">124</td>
-                <td class="confluenceTd">5127</td>
-                <td class="confluenceTd">5051</td>
-            </tr>
-            <tr>
-                <td class="confluenceTd">7</td>
-                <td class="confluenceTd">128</td>
-                <td class="confluenceTd">118</td>
-                <td class="confluenceTd">5191</td>
-                <td class="confluenceTd">5146</td>
-            </tr>
-            <tr>
-                <td class="confluenceTd">8</td>
-                <td class="confluenceTd">126</td>
-                <td class="confluenceTd">121</td>
-                <td class="confluenceTd">5179</td>
-                <td class="confluenceTd">5257</td>
-            </tr>
-            <tr>
-                <td class="confluenceTd">9</td>
-                <td class="confluenceTd">129</td>
-                <td class="confluenceTd">118</td>
-                <td class="confluenceTd">5034</td>
-                <td class="confluenceTd">5066</td>
-            </tr>
-            <tr>
-                <td class="confluenceTd">AVG</td>
-                <td class="confluenceTd">123.3</td>
-                <td class="confluenceTd">120.8</td>
-                <td class="confluenceTd">5137.8</td>
-                <td class="confluenceTd">5104.4</td>
-            </tr>
-            <tr>
-                <td colspan="1" class="confluenceTd">Comparison</td>
-                <td colspan="1" class="confluenceTd">100%</td>
-                <td colspan="1" class="confluenceTd">98%</td>
-                <td colspan="1" class="confluenceTd">100%</td>
-                <td colspan="1" class="confluenceTd">99%</td>
-            </tr>
-        </tbody>
-</table>
+| (Mb/s)     | singlebr-tap | patchport-tap | singlebr-vif | patchport-vif |
+| ---------- | ------------ | ------------- | ------------ | ------------- |
+| 0          | 116          | 124           | 5145         | 4968          |
+| 1          | 115          | 117           | 5182         | 5090          |
+| 2          | 121          | 120           | 5001         | 5082          |
+| 3          | 117          | 122           | 5307         | 5226          |
+| 4          | 128          | 123           | 4976         | 5216          |
+| 5          | 127          | 121           | 5236         | 4942          |
+| 6          | 126          | 124           | 5127         | 5051          |
+| 7          | 128          | 118           | 5191         | 5146          |
+| 8          | 126          | 121           | 5179         | 5257          |
+| 9          | 129          | 118           | 5034         | 5066          |
+| AVG        | 123.3        | 120.8         | 5137.8       | 5104.4        |
+| Comparison | 100%         | 98%           | 100%         | 99%           |
 
-![plot diagram](vif-throughputs.png?raw=true)
-![plot diagram](tap-throughputs.png?raw=true)
+![vif-throughputs.png](/uploads/vif-throughputs.png)
+![tap-throughputs.png](/uploads/tap-throughputs.png)
