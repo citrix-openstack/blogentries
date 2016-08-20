@@ -13,7 +13,6 @@ For example, it's zipped VHD-based images at:
 
 https://cloud-images.ubuntu.com/vivid/current/vivid-server-cloudimg-amd64-disk1.vhd.zip
 
-
 Let's see how to generate images from it.
 
 * Firstly download image and extract vhd file from it.
@@ -37,7 +36,7 @@ We can download QCOW2 images from:
 
 *https://uec-images.ubuntu.com/releases*
 
-For example, we download Fedora qcow2 formatted image. We can use the following steps to generate the OpenStack image for XenServer: 
+For example, we download Fedora qcow2 formatted image. We can use the following steps to generate the OpenStack image for XenServer:
 `qemu-img convert -O vpc Fedora-Cloud-Base-23-20151030.x86_64.qcow2 0.vhd tar -czf Fedora-Cloud-Base-23-20151030.x86_64.tgz 0.vhd glance image-create --name="Fedora_23" --is-public=true --container-format=ovf --disk-format=vhd --property vm_mode=hvm < Fedora-Cloud-Base-23-20151030.x86_64.tgz`
 At here I only take QCOW2 as the example, logically with the similar procedure we can create XenServer Images from any other images format as long as the images can be converted to VHD.
 
@@ -83,7 +82,6 @@ If we have an existing VM running on XenServer, it's easy to create the image fr
  9. After cloudbase-init finished running Sysprep, it will shut down VM.
 
 10. Export VDI on XenServer
-    
 
     ![exportVDI.png](/uploads/exportVDI.png)
 
