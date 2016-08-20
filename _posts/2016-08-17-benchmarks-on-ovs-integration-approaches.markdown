@@ -183,6 +183,10 @@ device
 Shown as below, the test result proves that the performance of vif and tap
 device will be both just slightly impacted with interim bridge \+ patch ports.
 
+---
+title: performance table
+---
+
 | (Mb/s)     | singlebr-tap | patchport-tap | singlebr-vif | patchport-vif |
 | ---------- | ------------ | ------------- | ------------ | ------------- |
 | 0          | 116          | 124           | 5145         | 4968          |
