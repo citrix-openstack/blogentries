@@ -60,16 +60,22 @@ If we have an existing VM running on XenServer, it's easy to create the image fr
 
  2. Use Windows Updates to install the latest updates.
 
- 3. Install PV driver:
+ 3. Install PV driver from XenCenter:
 
-    ![PVdriver-1.png](/uploads/PVdriver-1.png)![PVdriver-2.png](/uploads/PVdriver-2.png)
+    ![PVdriver-1.png](/uploads/PVdriver-1.png)
 
  4. Usually the above operation will insert the XS tools DVD into the DVD drive and finish the installation automatically; but for windows you may need to manually install the XS tools from the VM.
 
- 5. After install PV driver, it may set a device_id to the VM’s parameter of platform. But for different releases of XenServer, the device_id may be different: XS 6.0 has device_id 0001, XS 6.1 will upgrade the VM to device_id 0002, XS 6.2\+ can use either 0001 or 0002 - so will just use what's in the template, which is 0002 by default. If device_id is set, we have to specify the correct number in OpenStack Image’s metadata. In order to avoid much dependence, let’s remove this param.
-    `xe vm-param-list uuid=8f151bb3-4c90-3e65-94b3-5a9602380369 | grep device_id platform (MRW): timeoffset: 0; nx: true; pae: true; apic: true; viridian: false; acpi: true; device_id: 0002 xe vm-param-remove param-name=platform param-key=device_id uuid=8f151bb3-4c90-3e65-94b3-5a9602380369`
+    ![PVdriver-2.png](/uploads/PVdriver-2.png)
 
- 6. After installing XenServer tools, reboot VM to make it take effective.
+ 5. After installing PV driver, XenServer may set a device_id to the VM’s parameter of platform. That requires OpenStack to set the proper device_id in the image's metadata so that after the guest VM booted from this image, the PV driver could bind xenbus driver to the correct platform device. But for different releases of XenServer, the device_id may be different, it's easy to cause device_id miss-matching. In order to avoid potential issues, let’s remove this param so that PV driver will negotiate with hypervisor to get a correct device id.
+     `xe vm-param-list uuid=8f151bb3-4c90-3e65-94b3-5a9602380369 | grep device_id`
+
+    `platform (MRW): timeoffset: 0; nx: true; pae: true; apic: true; viridian: false; acpi: true; device_id: 0002 `
+
+    `xe vm-param-remove param-name=platform param-key=device_id uuid=8f151bb3-4c90-3e65-94b3-5a9602380369`
+
+ 6. After installing XenServer tools, reboot VM to make it taking effective.
 
  7. Add another Administrators account; as Window 10’s security strategy doesn’t allow the built-in Administrator to run Macrosoft Edge which will be used to download cloud. The built-in Administrator will be hidden per Windows’s security strategy.
 
