@@ -1,6 +1,6 @@
 ---
 title: XenServer and Neutron in MOS
-date: 2016-08-09 16:13:00 Z
+date: 2016-08-31 16:13:00 Z
 ---
 
 Mirantis OpenStack is a highly popular OpenStack distribution and Citrix has released
