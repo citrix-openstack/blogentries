@@ -9,7 +9,7 @@ Although OpenStack XenAPI supports some other disk formats, e.g. ami, raw, iso; 
 
 In this section, I will try to demonstrate how we can generate images from VHD images. For XenServer OpenStack, the VHD disks should be contained in gzipped tarball. If the existing image is in this format already, we can import it to glance image directly. Otherwise we need convert it to gzipped tarball firstly.
 
-For example, it's zipped VHD-based images at:
+For example, it's a zipped VHD-based image at:
 
 https://cloud-images.ubuntu.com/vivid/current/vivid-server-cloudimg-amd64-disk1.vhd.zip
 
