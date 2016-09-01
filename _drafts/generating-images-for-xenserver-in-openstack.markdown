@@ -88,9 +88,9 @@ If we have an existing VM running on XenServer, it's easy to create the image fr
 
  6. After installing XenServer tools, reboot VM to make it taking effective.
 
- 7. Add another Administrators account; as Window 10’s security strategy doesn’t allow the built-in Administrator to run Macrosoft Edge which will be used to download cloud. The built-in Administrator will be hidden per Windows’s security strategy.
+ 7. Add another Administrators account: The Window 10’s security strategy doesn’t allow the built-in Administrator to run Microsoft Edge which will be used to download cloudbase-init. The built-in Administrator will be hidden per Windows’s security strategy.
 
- 8. After login with the new account(e.g. myadmin). Downloading and install the latest Cloudbase-Init version:https://cloudbase.it/downloads/CloudbaseInitSetup_Stable_x64.msi
+ 8. After login with the new account (e.g. myadmin). Downloading and install the latest Cloudbase-Init version: https://cloudbase.it/downloads/CloudbaseInitSetup_Stable_x64.msi
 
     ![cloudbase-init-1.png](/uploads/cloudbase-init-1.png)
 
