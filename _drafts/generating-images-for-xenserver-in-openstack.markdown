@@ -16,15 +16,19 @@ https://cloud-images.ubuntu.com/vivid/current/vivid-server-cloudimg-amd64-disk1.
 Let's see how to generate images from it.
 
 * Firstly download image and extract vhd file from it.
+
   `wget https://cloud-images.ubuntu.com/vivid/current/vivid-server-cloudimg-amd64-disk1.vhd.zip`
+
   `unzip vivid-server-cloudimg-amd64-disk1.vhd.zip`
 
 Once we get vhd file, we can following the follow 2 steps to create the XenServer OpenStack image. This is a common procedure to create images from VHD files for XenServer OpenStack.
 
 * rename vhd file and create gzipped tarball
+
   `mv vivid-server-cloudimg-amd64-disk1.vhd 0.vhd tar -czf vivid-server-cloudimg-amd64-disk1.tgz 0.vhd`
 
 * create image and import data to glance
+
   `glance image-create --name="Ubuntu-vivid-server-cloudimg-amd64" --is-public=true --container-format=ovf --disk-format=vhd --property vm_mode=hvm < vivid-server-cloudimg-amd64-disk1.tgz`
 
 # Converting an existing QCOW2 image
@@ -37,7 +41,9 @@ We can download QCOW2 images from:
 *https://uec-images.ubuntu.com/releases*
 
 For example, we download Fedora qcow2 formatted image. We can use the following steps to generate the OpenStack image for XenServer:
+
 `qemu-img convert -O vpc Fedora-Cloud-Base-23-20151030.x86_64.qcow2 0.vhd tar -czf Fedora-Cloud-Base-23-20151030.x86_64.tgz 0.vhd glance image-create --name="Fedora_23" --is-public=true --container-format=ovf --disk-format=vhd --property vm_mode=hvm < Fedora-Cloud-Base-23-20151030.x86_64.tgz`
+
 At here I only take QCOW2 as the example, logically with the similar procedure we can create XenServer Images from any other images format as long as the images can be converted to VHD.
 
 # Creating from an existing XenServer VM
@@ -47,9 +53,11 @@ If we have an existing VM running on XenServer, it's easy to create the image fr
 1. shutdown the VM
 
 2. get VM's VDI and export it as VHD file. Usually that’s the first disk of the VM, so at here I use “device=xvda” to ensure only the first VBD is listed. If that’s not the first one, please identify it by yourself and specify the correct device.
+
    `vbd_uuid=$(xe vbd-list vm-name-label=<vm-name> device=xvda minimal=true) vdi_uuid=$(xe vdi-list vbd-uuids=${vbd_uuid} minimal=true) xe vdi-export format=vhd filename=0.vhd uuid=${vdi_uuid}`
 
 3. Once we exported this VHD file, we can follow the same way described in the first section to generate the image.
+
    Note: There are also other ways to export the vhd file, e.g. copy vhd files directly from ext SR. But I strongly recommend to use vdi-export. It's a formal supported method by XenServer and it will generate compact VHD file with less file size(removed the zero contents from the VHD file). Even you can use this way to compact the existing parsed VHD file. What you need to do is create a VDI and import the VHD file to this VDI then export VHD file from VDI. Finally we will get a compact VHD file.
 
 # Creating a Windows image
@@ -69,6 +77,7 @@ If we have an existing VM running on XenServer, it's easy to create the image fr
     ![PVdriver-2.png](/uploads/PVdriver-2.png)
 
  5. After installing PV driver, XenServer may set a device_id to the VM’s parameter of platform. That requires OpenStack to set the proper device_id in the image's metadata so that after the guest VM booted from this image, the PV driver could bind xenbus driver to the correct platform device. But for different releases of XenServer, the device_id may be different, it's easy to cause device_id miss-matching. In order to avoid potential issues, let’s remove this param so that PV driver will negotiate with hypervisor to get a correct device id.
+
     `xe vm-param-list uuid=8f151bb3-4c90-3e65-94b3-5a9602380369 | grep device_id`
 
     `platform (MRW): timeoffset: 0; nx: true; pae: true; apic: true; viridian: false; acpi: true; device_id: 0002`
@@ -92,6 +101,7 @@ If we have an existing VM running on XenServer, it's easy to create the image fr
     ![exportVDI.png](/uploads/exportVDI.png)
 
 11. Create image and upload to glance:
+
     `tar -cvzf win10.tgz 0.vhd glance image-create --name="win10" --visibility=public --container-format=ovf --disk-format=vhd --property vm_mode=hvm <win10.tgz`
 
 12. Create a new VM from the new image
