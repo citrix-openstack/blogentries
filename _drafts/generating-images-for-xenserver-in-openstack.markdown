@@ -69,9 +69,9 @@ If we have an existing VM running on XenServer, it's easy to create the image fr
     ![PVdriver-2.png](/uploads/PVdriver-2.png)
 
  5. After installing PV driver, XenServer may set a device_id to the VM’s parameter of platform. That requires OpenStack to set the proper device_id in the image's metadata so that after the guest VM booted from this image, the PV driver could bind xenbus driver to the correct platform device. But for different releases of XenServer, the device_id may be different, it's easy to cause device_id miss-matching. In order to avoid potential issues, let’s remove this param so that PV driver will negotiate with hypervisor to get a correct device id.
-     `xe vm-param-list uuid=8f151bb3-4c90-3e65-94b3-5a9602380369 | grep device_id`
+    `xe vm-param-list uuid=8f151bb3-4c90-3e65-94b3-5a9602380369 | grep device_id`
 
-    `platform (MRW): timeoffset: 0; nx: true; pae: true; apic: true; viridian: false; acpi: true; device_id: 0002 `
+    `platform (MRW): timeoffset: 0; nx: true; pae: true; apic: true; viridian: false; acpi: true; device_id: 0002`
 
     `xe vm-param-remove param-name=platform param-key=device_id uuid=8f151bb3-4c90-3e65-94b3-5a9602380369`
 
@@ -98,4 +98,4 @@ If we have an existing VM running on XenServer, it's easy to create the image fr
 
     `nova boot --flavor 3 --image win10 --meta admin_pass=testVM1pass --nic net-id=0cb33381-e48b-444a-8709-fde15d4cab4e Win10-testVM1`
 
-13. Login Windows with myadmin by using password as the one specified by “—meta admin_pass=”; check this VM’s hostname is Win10-testVM1 which the VM name specified in the nova boot command.
+13. Login Windows with myadmin by using password as the one specified by “—meta admin_pass=”; check this VM’s hostname is Win10-testVM1 which is the VM name specified in the nova boot command.
