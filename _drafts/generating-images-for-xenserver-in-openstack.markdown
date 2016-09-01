@@ -64,9 +64,9 @@ If we have an existing VM running on XenServer, it's easy to create the image fr
 
  1. From XenCenter, create a VM and install the OS of Window(e.g. Windows 10 (64-bit))
 
-    ![win10-install-2.png](/uploads/win10-install-2.png)
-
     ![win10-install-1.png](/uploads/win10-install-1.png)
+
+    ![win10-install-2.png](/uploads/win10-install-2.png)
 
  2. Use Windows Updates to install the latest updates.
 
