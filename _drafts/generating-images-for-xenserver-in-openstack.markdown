@@ -3,7 +3,7 @@ title: Generating Images for XenServer in OpenStack
 date: 2016-08-20 16:24:00 Z
 ---
 
-Although OpenStack XenAPI supports some other disk formats, e.g. ami, raw, iso; vhd is the most commonly used and strongly recommended disk format. This blog will focus on how to create images basing on VHD disk format; how to convert other types of disk format to VHD and finally how to create Windows images for XenServer in OpenStack.
+Although OpenStack XenAPI supports some other disk formats, e.g. ami, raw, iso; VHD is the most commonly used and strongly recommended disk format. By comparing to raw disk, the occupied physical size can be much smaller than the virtual size with VHD. Actually VHD is the default disk format in XenServer OpenStack. This blog will focus on how to create images basing on VHD disk format; how to convert other types of disk format to VHD and finally how to create Windows images for XenServer in OpenStack.
 
 # Generate Images from VHD images
 
@@ -34,8 +34,7 @@ Once we get vhd file, we can following the follow 2 steps to create the XenServe
 
 # Converting an existing QCOW2 image
 
-Currently XenServer doesn't support QCOW2 images; but thankfully it's easy to convert QCOW2 to VHD based images by using qemu-img.
-We can download QCOW2 images from:
+Currently XenServer doesn't support QCOW2 images; but thankfully it's easy to convert QCOW2 to VHD based images by using qemu-img. We can download QCOW2 images from:
 
 *https://getfedora.org/cloud/download/*
 
@@ -67,9 +66,13 @@ If we have an existing VM running on XenServer, it's easy to create the image fr
 
 # Creating a Windows image
 
+In this section, I will try to describe how to create a Windows Image on XenServer. Please note this should be done on XenServer 6.5 or later and have all hotfixes installed(particularly the PV tools hotfixes).
+
  1. From XenCenter, create a VM and install the OS of Window(e.g. Windows 10 (64-bit))
 
     ![win10-install-1.png](/uploads/win10-install-1.png)
+
+    When OpenStack creates a VM it does not have the per-distribution settings in the Template, so "Other install media" has a closer set of options to that presented by OpenStack. So at here we suggest you choose the option of "Other install media".
 
     ![win10-install-2.png](/uploads/win10-install-2.png)
 
@@ -83,11 +86,13 @@ If we have an existing VM running on XenServer, it's easy to create the image fr
 
     ![PVdriver-2.png](/uploads/PVdriver-2.png)
 
- 5. After installing PV driver, XenServer may set a device_id to the VM’s parameter of platform. That requires OpenStack to set the proper device_id in the image's metadata so that after the guest VM booted from this image, the PV driver could bind xenbus driver to the correct platform device. But for different releases of XenServer, the device_id may be different, it's easy to cause device_id miss-matching. In order to avoid potential issues, let’s remove this parameter so that PV driver will negotiate with hypervisor to get a correct device id.
+ 5. Check that the device_id has not been set by the XenServer tools. 
+
+    After installing PV driver, XenServer may set a device_id to the VM’s parameter of platform. That requires OpenStack to set the proper device_id in the image's metadata so that the PV driver could bind xenbus driver to the correct platform device after the guest VM booted from this image. But for different releases of XenServer, the device_id may be different, it's easy to cause device_id miss-matching. In order to avoid potential issues, let’s ensure this parameter is unset (Actually with choosing "Other install media" as the template in step 1, it should be unset). In that way, that PV driver will negotiate with hypervisor to get a correct device id.
 
     `xe vm-param-list uuid=8f151bb3-4c90-3e65-94b3-5a9602380369 | grep device_id`
 
-    `platform (MRW): timeoffset: 0; nx: true; pae: true; apic: true; viridian: false; acpi: true; device_id: 0002`
+    If device_id is set, you can use the following command to unset it:
 
     `xe vm-param-remove param-name=platform param-key=device_id uuid=8f151bb3-4c90-3e65-94b3-5a9602380369`
 
