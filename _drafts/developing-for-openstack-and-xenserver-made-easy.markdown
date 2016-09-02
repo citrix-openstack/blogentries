@@ -41,8 +41,48 @@ If you don't already have a [DevStack ](http://docs.openstack.org/developer/devs
 
 1\. Create a VM
 
-The VM created should 
+We're going to install our XenServer VM using a CD image, which is free from www.xenserver.org.  As we're only going to run small VMs in a devstack environment, give the VM 2GB RAM and 60GB disk space (required for the XenServer partition layout even though a freshly installed host only uses 3GB).
+virt-install gives a great way to set this up, and the following command line calls will create your virtual machine for you.  Alternatively, you can use virt-manager or even VirtualBox if you prefer not using qemu, or using a GUI.
+
+    IMAGE_DIR=/var/lib/libvirt/images
+    wget http://downloadns.citrix.com.edgesuite.net/11616/XenServer-7.0.0-main.iso -O $IMAGE_DIR/XenServer-7.0.0-main.iso
+    qemu-img create -f qcow2 $IMAGE_DIR/XenServer.qcow2 60G
+    chmod a\+rw $IMAGE_DIR/XenServer\*
+    virt-install --name XenServer --ram 2048 --cpu host --vcpus 2 --disk path=$IMAGE_DIR/XenServer.qcow2,bus=ide --cdrom $IMAGE_DIR/XenServer-7.0.0-main.iso --network=bridge:virbr0,model=e1000 --graphics vnc,listen=0.0.0.0
 
 2\. Install XenServer
 
+If you use virt-install and virt-viewer is installed, you may automatically connect to the instance.
+Otherwise, launch a VNC viewer and connect to the VNC port for the guest (if it's the first guest, this will be 5901)
+
+As you step through the installer, you are likely to see a warning message that Hardware Virtualisation is not supported.  This would need nested virtualisation to be enabled in libvirt, but we don't have to run Windows guests - we can test\+develop using Cirros or other PV guests.  Of course, if you install your XenServer on a separate physical host, Windows VMs will work great too.
+
+[HVM_Warning.PNG](/uploads/HVM_Warning.PNG)
+
+The XenServer\+OpenStack integration only supports thinly-provisioned local disks, so make sure you select it on the Virtual Machine Storage page:
+
+[ThinProvisioning.PNG](/uploads/ThinProvisioning.PNG)
+
+After selecting Thin Provisioning, just complete the installation and take note of the XenServer IP address provided by the DHCP server from the console:
+
+[IP_Address.PNG](/uploads/IP_Address.PNG)
+
 2\. Set DevStack options to use the new XenServer
+
+Once you've got your installed host's IP address, make sure the stack user can log in to the host without a password (using ssh-keygen if needed, then ssh-copy-id) and then it's a simple matter of configuring your DevStack instance to use this host with the independent_compute mode:
+
+    [stack@xrtmia-03-12 devstack]$ cat local.conf 
+    [[local|localrc]]
+    VIRT_DRIVER=xenserver
+    XENAPI_CONNECTION_URL=http://192.168.122.201
+    XENAPI_PASSWORD=<password>
+    DOMZERO_USER=stack
+    
+    [[post-config|$NOVA_CONF]]
+    [xenserver]
+    independent_compute=True
+    check_host=False
+
+After running stack.sh, you should now be able to create Cirros VMs out-of-the-box!
+
+If you need to run different VMs under XenServer, check out Jianghua's blog post at <URL>.

@@ -116,7 +116,7 @@ In this section, I will try to describe how to create a Windows Image on XenServ
 
     `tar -cvzf win10.tgz 0.vhd glance image-create --name="win10" --visibility=public --container-format=ovf --disk-format=vhd --property vm_mode=hvm <win10.tgz`
 
-12. Create a new VM from the new image
+12. Create a new VM from the new image to verify this image.
 
     `nova boot --flavor 3 --image win10 --meta admin_pass=testVM1pass --nic net-id=0cb33381-e48b-444a-8709-fde15d4cab4e Win10-testVM1`
 
