@@ -1,6 +1,6 @@
 ---
 title: Developing for OpenStack and XenServer Made Easy
-date: 2016-08-08 16:51:00 Z
+date: 2016-09-05 16:51:00 Z
 ---
 
 For many years, setting up a development environment for XenServer and OpenStack has been a painful exercise.  XenServer has a unique deployment model with OpenStack, where the services (specifically Nova Compute) are run in a virtual machine running under the XenServer host.  Now you can easily deploy an OpenStack environment accessing *any* XenServer host - whether connected over a network or running in a local Virtual Machine!
@@ -69,14 +69,19 @@ After selecting Thin Provisioning, just complete the installation and take note 
 
 2\. Set DevStack options to use the new XenServer
 
-Once you've got your installed host's IP address, make sure the stack user can log in to the host without a password (using ssh-keygen if needed, then ssh-copy-id) and then it's a simple matter of configuring your DevStack instance to use this host with the independent_compute mode:
+Once you've got your installed host's IP address, make sure a different user - not the one running stack.sh - can log in to the host without a password.  I will use root as stack already has sudo permissions for that user:
+
+    sudo ssh-keygen
+    sudo ssh-copy-id root@192.168.122.201
+
+After that, it's a simple matter of configuring your DevStack instance to use this host with the independent_compute mode:
 
     [stack@xrtmia-03-12 devstack]$ cat local.conf 
     [[local|localrc]]
     VIRT_DRIVER=xenserver
     XENAPI_CONNECTION_URL=http://192.168.122.201
     XENAPI_PASSWORD=<password>
-    DOMZERO_USER=stack
+    DOMZERO_USER=root
     
     [[post-config|$NOVA_CONF]]
     [xenserver]
