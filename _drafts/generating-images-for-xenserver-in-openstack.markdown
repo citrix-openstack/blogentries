@@ -60,7 +60,9 @@ If we have an existing VM running on XenServer, it's easy to create the image fr
 2. get VM's VDI and export it as VHD file. Usually that’s the first disk of the VM, so at here I use “device=xvda” to ensure only the first VBD is listed. If that’s not the first one, please identify it by yourself and specify the correct device.
 
    `vbd_uuid=$(xe vbd-list vm-name-label=<vm-name> device=xvda minimal=true)`
+
    `vdi_uuid=$(xe vdi-list vbd-uuids=${vbd_uuid} minimal=true)`
+
    `xe vdi-export format=vhd filename=0.vhd uuid=${vdi_uuid}`
 
 3. Once we exported this VHD file, we can follow the same way described in the first section to generate the image.
@@ -130,6 +132,6 @@ XenServer does, of course, support PV guests under OpenStack, and generation of 
 
 # Give it a go
 
-XenServer-based OpenStack clouds are really easy to deploy using Mirantis OpenSTack and the XenServer Fuel plugin - check out our other blog posts like [Introduction to the XenServer Fuel Plugin](https://www.citrix.com/blogs/2016/07/11/introduction-to-xenserver-fuel-plugin/) or [Deploying Mirantis OpenStack on a single XenServer](https://www.citrix.com/blogs/2015/10/23/deploying-mirantis-openstack-on-a-single-xenserver/) - so it's never been easier to create and test your own XenServer OpenStack images.
+XenServer-based OpenStack clouds are really easy to deploy using Mirantis OpenStack and the XenServer Fuel plugin - check out our other blog posts like [Introduction to the XenServer Fuel Plugin](https://www.citrix.com/blogs/2016/07/11/introduction-to-xenserver-fuel-plugin/) or [Deploying Mirantis OpenStack on a single XenServer](https://www.citrix.com/blogs/2015/10/23/deploying-mirantis-openstack-on-a-single-xenserver/) - so it's never been easier to create and test your own XenServer OpenStack images.
 
 Also, do check out XenServer 7.0 [enterprise edition ](https://docs.citrix.com/content/dam/docs/en-us/xenserver/xenserver-7-0/downloads/xenserver-7-0-licensing-faq.pdf) to get features like the Automated Windows VM Driver Updates to make your cloud easy to maintain.
