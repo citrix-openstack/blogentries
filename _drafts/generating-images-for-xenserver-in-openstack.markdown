@@ -25,10 +25,9 @@ Once we get vhd file, we can following the follow 2 steps to create the XenServe
 
 * rename vhd file and create gzipped tarball
 
-  mv vivid-server-cloudimg-amd64-disk1.vhd 0.vhd
+  `mv vivid-server-cloudimg-amd64-disk1.vhd 0.vhd`
 
-  \
-  tar -czf vivid-server-cloudimg-amd64-disk1.tgz 0.vhd
+  `tar -czf vivid-server-cloudimg-amd64-disk1.tgz 0.vhd`
 
 * create image and import data to glance
 
@@ -46,10 +45,8 @@ For example, we download Fedora qcow2 formatted image. We can use the following 
 
 `qemu-img convert -O vpc Fedora-Cloud-Base-23-20151030.x86_64.qcow2 0.vhd`
 
-\
 `tar -czf Fedora-Cloud-Base-23-20151030.x86_64.tgz 0.vhd`
 
-\
 `glance image-create --name="Fedora_23" --is-public=true --container-format=ovf --disk-format=vhd --property vm_mode=hvm < Fedora-Cloud-Base-23-20151030.x86_64.tgz`
 
 At here I only take QCOW2 as the example, logically with the similar procedure we can create XenServer Images from any other images format as long as the images can be converted to VHD.
@@ -63,11 +60,7 @@ If we have an existing VM running on XenServer, it's easy to create the image fr
 2. get VM's VDI and export it as VHD file. Usually that’s the first disk of the VM, so at here I use “device=xvda” to ensure only the first VBD is listed. If that’s not the first one, please identify it by yourself and specify the correct device.
 
    `vbd_uuid=$(xe vbd-list vm-name-label=<vm-name> device=xvda minimal=true)`
-
-   \
    `vdi_uuid=$(xe vdi-list vbd-uuids=${vbd_uuid} minimal=true)`
-
-   \
    `xe vdi-export format=vhd filename=0.vhd uuid=${vdi_uuid}`
 
 3. Once we exported this VHD file, we can follow the same way described in the first section to generate the image.
