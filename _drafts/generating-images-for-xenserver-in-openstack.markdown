@@ -66,17 +66,17 @@ If we have an existing VM running on XenServer, it's easy to create the image fr
 
 # Creating a Windows image
 
-In this section, I will try to describe how to create a Windows Image on XenServer. Please note this should be done on XenServer 6.5 or later and have all hotfixes installed(particularly the PV tools hotfixes).
+In this section, I will try to describe how to create a Windows Image on XenServer. Please note this should be done on XenServer 6.5 or later and have all hotfixes installed (particularly the PV tools hotfixes).  The most recent PV tools will bind to multiple device_ids (see step 5 below), and therefore do not require special flags to be added to the image to set the device ID when creating a new VM.
 
- 1. From XenCenter, create a VM and install the OS of Window(e.g. Windows 10 (64-bit))
+ 1. From XenCenter, create a VM.  When OpenStack creates a VM it does not have the per-distribution settings in the Template, so "Other install media" has a closer set of options to that presented by OpenStack. So at here we suggest you choose the option of "Other install media" which will give a default HVM template.
 
     ![win10-install-1.png](/uploads/win10-install-1.png)
 
-    When OpenStack creates a VM it does not have the per-distribution settings in the Template, so "Other install media" has a closer set of options to that presented by OpenStack. So at here we suggest you choose the option of "Other install media".
+    Select the CD image to install from.  In this example, we are installing Windows 10 (64-bit)
 
     ![win10-install-2.png](/uploads/win10-install-2.png)
 
- 2. Use Windows Updates to install the latest updates.
+ 2. Use Windows Updates to install the latest updates.  If you're using the Enterprise version of XenServer 7.0, then the PV drivers should also be automatically downloaded and installed for you (auto updating when new versions are released as well), so you can skip to step 6.
 
  3. Install PV driver from XenCenter:
 
@@ -86,38 +86,47 @@ In this section, I will try to describe how to create a Windows Image on XenServ
 
     ![PVdriver-2.png](/uploads/PVdriver-2.png)
 
- 5. Check that the device_id has not been set by the XenServer tools. 
+ 5. Check that the device_id has not been set by the XenServer tools.
 
-    After installing PV driver, XenServer may set a device_id to the VM’s parameter of platform. That requires OpenStack to set the proper device_id in the image's metadata so that the PV driver could bind xenbus driver to the correct platform device after the guest VM booted from this image. But for different releases of XenServer, the device_id may be different, it's easy to cause device_id miss-matching. In order to avoid potential issues, let’s ensure this parameter is unset (Actually with choosing "Other install media" as the template in step 1, it should be unset). In that way, that PV driver will negotiate with hypervisor to get a correct device id.
+    Some versions of the PV drivers may set a device_id to the VM’s parameter of platform, even if it is not specified on the template. If a device_id is set on the VM during installation, OpenStack must have the proper device_id in the image's metadata so that the PV driver could bind xenbus driver to the correct platform device after the guest VM booted from this image. \
+    In order to avoid potential issues, let’s ensure this parameter is not set (Actually with choosing "Other install media" as the template in step 1, it should be unset).
 
     `xe vm-param-list uuid=8f151bb3-4c90-3e65-94b3-5a9602380369 | grep device_id`
 
-    If device_id is set, you can use the following command to unset it:
+    If device_id is set, you can use the following command to unset it, but you may also need to re-install the PV drivers.
 
     `xe vm-param-remove param-name=platform param-key=device_id uuid=8f151bb3-4c90-3e65-94b3-5a9602380369`
 
- 6. After installing XenServer tools, reboot VM to make it effective.
+ 6. Add another Administrators account: The Window 10’s security strategy doesn’t allow the built-in Administrator to run Microsoft Edge which will be used to download cloudbase-init. The built-in Administrator will be hidden per Windows’s security strategy.
 
- 7. Add another Administrators account: The Window 10’s security strategy doesn’t allow the built-in Administrator to run Microsoft Edge which will be used to download cloudbase-init. The built-in Administrator will be hidden per Windows’s security strategy.
-
- 8. After login with the new account (e.g. myadmin). Downloading and install the latest Cloudbase-Init version: https://cloudbase.it/downloads/CloudbaseInitSetup_Stable_x64.msi
+ 7. After login with the new account (e.g. myadmin). Downloading and install the latest Cloudbase-Init version: https://cloudbase.it/downloads/CloudbaseInitSetup_Stable_x64.msi
 
     ![cloudbase-init-1.png](/uploads/cloudbase-init-1.png)
 
     ![cloudbase-init-2.png](/uploads/cloudbase-init-2.png)
 
- 9. After cloudbase-init finished running Sysprep, it will shut down VM.
+ 8. After cloudbase-init finished running Sysprep, it will shut down VM.
 
-10. Export VDI on XenServer:
+ 9. Export VDI on XenServer:
 
     ![exportVDI.png](/uploads/exportVDI.png)
 
-11. Create image and upload to glance:
+10. Create image and upload to glance:
 
-    `tar -cvzf win10.tgz 0.vhd glance image-create --name="win10" --visibility=public --container-format=ovf --disk-format=vhd --property vm_mode=hvm <win10.tgz`
+    `tar -cvzf win10.tgz 0.vhd glance image-create --name="win10" --visibility=public --container-format=ovf --disk-format=vhd --property vm_mode=hvm --property os_type=windows <win10.tgz`
 
-12. Create a new VM from the new image to verify this image.
+11. Create a new VM from the new image to verify this image.
 
     `nova boot --flavor 3 --image win10 --meta admin_pass=testVM1pass --nic net-id=0cb33381-e48b-444a-8709-fde15d4cab4e Win10-testVM1`
 
-13. Login Windows with myadmin by using password as the one specified by “—meta admin_pass=”; check this VM’s hostname is Win10-testVM1 which is the VM name specified in the nova boot command.
+12. Login Windows with myadmin by using password as the one specified by “—meta admin_pass=”; check this VM’s hostname is Win10-testVM1 which is the VM name specified in the nova boot command.
+
+# PV Guests
+
+XenServer does, of course, support PV guests under OpenStack, and generation of these images is much the same as for HVM guests.  The key difference is when uploading them to glance, specify "--property vm_mode=xen" instead of hvm.
+
+# Give it a go
+
+XenServer-based OpenStack clouds are really easy to deploy using Mirantis OpenSTack and the XenServer Fuel plugin - check out our other blog posts like [Introduction to the XenServer Fuel Plugin](https://www.citrix.com/blogs/2016/07/11/introduction-to-xenserver-fuel-plugin/) or [Deploying Mirantis OpenStack on a single XenServer](https://www.citrix.com/blogs/2015/10/23/deploying-mirantis-openstack-on-a-single-xenserver/) - so it's never been easier to create and test your own XenServer OpenStack images.
+
+Also, do check out XenServer 7.0 [enterprise edition ](https://docs.citrix.com/content/dam/docs/en-us/xenserver/xenserver-7-0/downloads/xenserver-7-0-licensing-faq.pdf) to get features like the Automated Windows VM Driver Updates to make your cloud easy to maintain.
