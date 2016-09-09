@@ -48,12 +48,12 @@ virt-install gives a great way to set this up, and the following command line ca
     wget http://downloadns.citrix.com.edgesuite.net/11616/XenServer-7.0.0-main.iso -O $IMAGE_DIR/XenServer-7.0.0-main.iso
     qemu-img create -f qcow2 $IMAGE_DIR/XenServer.qcow2 60G
     chmod a\+rw $IMAGE_DIR/XenServer\*
-    virt-install --name XenServer --ram 2048 --cpu host --vcpus 2 --disk path=$IMAGE_DIR/XenServer.qcow2,bus=ide --cdrom $IMAGE_DIR/XenServer-7.0.0-main.iso --network=bridge:virbr0,model=e1000 --graphics vnc,listen=0.0.0.0
+    virt-install --name XenServer --ram 2048 --cpu host --vcpus 2 --disk path=$IMAGE_DIR/XenServer.qcow2,bus=ide --cdrom $IMAGE_DIR/XenServer-7.0.0-main.iso --network=bridge:virbr0,model=e1000 --network=bridge:virbr1,model=e1000 --wait 0 --graphics vnc,listen=0.0.0.0
 
 ## Step 2: Install XenServer
 
 If you use virt-install and virt-viewer is installed, you may automatically connect to the instance.
-Otherwise, launch a VNC viewer and connect to the VNC port for the guest (if it's the first guest, this will be 5901)
+Otherwise, launch a VNC viewer and connect to the VNC port for the guest (if it's the first guest, this will be 5901 - use "virsh vncdisplay XenServer" to find the VNC number, and add 5900 to find the port number)
 
 As you step through the installer, you are likely to see a warning message that Hardware Virtualisation is not supported.  This would need nested virtualisation to be enabled in libvirt, but we don't have to run Windows guests - we can test\+develop using Cirros or other PV guests.  Of course, if you install your XenServer on a separate physical host, Windows VMs will work great too.
 

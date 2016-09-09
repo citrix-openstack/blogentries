@@ -1,6 +1,6 @@
 ---
 title: Generating Images for XenServer in OpenStack
-date: 2016-08-20 16:24:00 Z
+date: 2016-09-09 16:24:00 Z
 ---
 
 Although OpenStack XenAPI supports some other disk formats, e.g. ami, raw, iso; VHD is the most commonly used and strongly recommended disk format. By comparing to raw disk, the occupied physical size can be much smaller than the virtual size with VHD. Actually VHD is the default disk format in XenServer OpenStack. This blog will focus on how to create images basing on VHD disk format; how to convert other types of disk format to VHD and finally how to create Windows images for XenServer in OpenStack.
