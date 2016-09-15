@@ -90,4 +90,6 @@ After that, it's a simple matter of configuring your DevStack instance to use th
 
 After running stack.sh, you should now be able to create Cirros VMs out-of-the-box!
 
+Note that if you want to use Horizon to create instances, make sure that you change a default which is incompatible with the isolated compute mode: On the <???> page, make sure that Partitioning is set to Manual.
+
 If you need to run different VMs under XenServer, check out Jianghua's blog post at <URL>.
