@@ -18,7 +18,9 @@ The combination of Mirantis OpenStack 9.0 and Citrix XenServer brings some great
 * Enterprise-level XenServer features, including:
 
   * Automatic management of the SVVP-certified Windows virtualised network and disk drivers.
-  * Direct-Inspect APIs for better-than-physical virus, malware and hacker protection
-  * Automatic hypervisor health checks, running hundreds of checks against your XenServer setup
 
-Why not check out the [YouTube video ](https://www.youtube.com/watch?v=n7OJ7Eyj77I) showing how easy it is to install and configure a XenServer + Mirantis OpenStack 9.0 environment!
+  * Direct-Inspect APIs for better-than-physical virus, malware and hacker protection
+
+  * Automatic hypervisor health checks, routinely running checks against your XenServer setup to notify you of actions needed to be taken
+
+Why not check out the [YouTube video ](https://www.youtube.com/watch?v=n7OJ7Eyj77I) showing how easy it is to install and configure a XenServer \+ Mirantis OpenStack 9.0 environment!
