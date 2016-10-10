@@ -17,7 +17,7 @@ The combination of Mirantis OpenStack 9.0 and Citrix XenServer brings some great
 
 * Enterprise-level XenServer features, including:
 
-  * Automatic management of the SVVP-certified Windows virtualised network and disk drivers.
+  * Automatic management of the logo-certified Windows virtualised network and disk drivers.
 
   * Direct-Inspect APIs for better-than-physical virus, malware and hacker protection
 
