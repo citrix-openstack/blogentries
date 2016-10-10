@@ -23,4 +23,4 @@ The combination of Mirantis OpenStack 9.0 and Citrix XenServer brings some great
 
   * Automatic hypervisor health checks, routinely running checks against your XenServer setup to notify you of actions needed to be taken
 
-Why not check out the [YouTube video ](https://www.youtube.com/watch?v=n7OJ7Eyj77I) showing how easy it is to install and configure a XenServer \+ Mirantis OpenStack 9.0 environment!
+See the XenServer 7 launch [blog post ](https://www.citrix.com/blogs/2016/05/24/xenserver-7-whats-new/)for the even more reasons to chose XenServer, and check out the [YouTube video ](https://www.youtube.com/watch?v=n7OJ7Eyj77I) showing how easy it is to install and configure a XenServer \+ Mirantis OpenStack 9.0 environment!
