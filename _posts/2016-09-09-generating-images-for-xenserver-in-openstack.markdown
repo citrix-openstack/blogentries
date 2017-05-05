@@ -25,13 +25,10 @@ Let's see how to generate images from it.
 
   `[root@baras tmp]# vSize=$(($(vhd-util query -n vivid-server-cloudimg-amd64-disk1.vhd -v) * 1024 * 1024))`
 
-  \
   `[root@baras tmp]# xe vdi-create sr-uuid=55654811-fa04-ba61-6c11-59116f85399f name-label=tmpVDI type=user virtual-size=$vSize`
 
-  \
   `a4bb1d38-5026-47ed-a400-b5fd205c5339`
 
-  \
   `[root@baras tmp]# xe vdi-import uuid=a4bb1d38-5026-47ed-a400-b5fd205c5339 filename=vivid-server-cloudimg-amd64-disk1.vhd format=vhd`
 
 
@@ -41,17 +38,14 @@ Let's see how to generate images from it.
   \
   `/var/run/sr-mount/55654811-fa04-ba61-6c11-59116f85399f/a4bb1d38-5026-47ed-a400-b5fd205c5339.vhd`
 
-  \
   `[root@baras tmp]# cp /var/run/sr-mount/55654811-fa04-ba61-6c11-59116f85399f/a4bb1d38-5026-47ed-a400-b5fd205c5339.vhd ./`
 
-  \
   `[root@baras tmp]# xe vdi-destroy uuid=a4bb1d38-5026-47ed-a400-b5fd205c5339.vhd`
 
 * Rename vhd file and create gzipped tarball
 
   `[root@baras tmp]# mv a4bb1d38-5026-47ed-a400-b5fd205c5339.vhd 0.vhd`
 
-  \
   `[root@baras tmp]# tar -czf vivid-server-cloudimg-amd64-disk1.tgz 0.vhd`\
 
 * Create image and import data to glance
