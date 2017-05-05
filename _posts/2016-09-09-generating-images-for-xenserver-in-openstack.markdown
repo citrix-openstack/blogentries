@@ -32,10 +32,10 @@ Let's see how to generate images from it.
   `[root@baras tmp]# xe vdi-import uuid=a4bb1d38-5026-47ed-a400-b5fd205c5339 filename=vivid-server-cloudimg-amd64-disk1.vhd format=vhd`
 
 
-* Under the SR mount path, you will see a VHD file named as <VDI-uuid>.vhd. Let's copy this file to another path:\
+* Under the SR mount path, you will see a VHD file named as <VDI-uuid>.vhd. Let's copy this file to another path:
+
   `[root@baras tmp]# ls /var/run/sr-mount/55654811-fa04-ba61-6c11-59116f85399f/a4bb1d38-5026-47ed-a400-b5fd205c5339.vhd`
 
-  \
   `/var/run/sr-mount/55654811-fa04-ba61-6c11-59116f85399f/a4bb1d38-5026-47ed-a400-b5fd205c5339.vhd`
 
   `[root@baras tmp]# cp /var/run/sr-mount/55654811-fa04-ba61-6c11-59116f85399f/a4bb1d38-5026-47ed-a400-b5fd205c5339.vhd ./`
@@ -78,7 +78,6 @@ If we have an existing VM running on XenServer, it's easy to create the image fr
 
    `vbd_uuid=$(xe vbd-list vm-name-label=${vm-name} device=xvda minimal=true)`
 
-   \
    `vdi_uuid=$(xe vdi-list vbd-uuids=${vbd_uuid} minimal=true)`
 
 3. Using the vdi_uuid to find the VHD file under the SR mount path, in case this is an EXT SR; otherwise you should export this VDI to file system and then follow the steps in the section of "Generate Images from VHD images" to import this VHD to an EXT SR's VDI and take that VDI's VHD file directly.
