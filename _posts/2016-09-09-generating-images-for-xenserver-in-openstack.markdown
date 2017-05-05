@@ -7,11 +7,11 @@ Although OpenStack XenAPI supports some other disk formats, e.g. ami, raw, iso; 
 
 # Generate Images from VHD images
 
-For XenServer's OpenStack integration, the VHD disks should be contained in gzipped tarball, as we can support have multiple differencing disks (snapshots) from a single base VHD.  If the existing image is in this format already, we can import it to Glance image directly. Otherwise we need convert it to gzipped tarball firstly.
+For XenServer’s OpenStack integration, the VHD disks should be contained in gzipped tarball, as we can support having multiple differencing disks (snapshots) from a single base VHD. And the VHD file itself should be created by vhd-util(having the originator set to "tap"), otherwise it will fail at resizing at booting VMs from the image. So it's recommended to create a VDI on a EXT SR in the XenServer and import the source VHD file into this new VDI. And then we can create OpenStack image basing on new VHD file.
 
 For example, there is a zipped VHD-based Ubuntu image at:
 
-https://cloud-images.ubuntu.com/vivid/current/vivid-server-cloudimg-amd64-disk1.vhd.zip
+*[https://cloud-images.ubuntu.com/vivid/current/vivid-server-cloudimg-amd64-disk1.vhd.zip](https://cloud-images.ubuntu.com/vivid/current/vivid-server-cloudimg-amd64-disk1.vhd.zip)*
 
 Let's see how to generate images from it.
 
@@ -21,17 +21,28 @@ Let's see how to generate images from it.
 
   `unzip vivid-server-cloudimg-amd64-disk1.vhd.zip`
 
-Once we get vhd file, we can following the follow 2 steps to create the XenServer OpenStack image. This is a common procedure to create images from VHD files for XenServer OpenStack.
+* On a XenServer which has a EXT SR(e.g. uuid=55654811-fa04-ba61-6c11-59116f85399f), create a new VDI and import this VHD file to it:
 
-* rename vhd file and create gzipped tarball
+  `[root@baras tmp]# vSize=$(($(vhd-util query -n vivid-server-cloudimg-amd64-disk1.vhd -v) * 1024 * 1024))`\
+  `[root@baras tmp]# xe vdi-create sr-uuid=55654811-fa04-ba61-6c11-59116f85399f name-label=tmpVDI type=user virtual-size=$vSize`\
+  `a4bb1d38-5026-47ed-a400-b5fd205c5339`\
+  `[root@baras tmp]# xe vdi-import uuid=a4bb1d38-5026-47ed-a400-b5fd205c5339 filename=vivid-server-cloudimg-amd64-disk1.vhd format=vhd`
 
-  `mv vivid-server-cloudimg-amd64-disk1.vhd 0.vhd`
 
-  `tar -czf vivid-server-cloudimg-amd64-disk1.tgz 0.vhd`
+* Under the SR mount path, you will see a VHD file named as <VDI-uuid>.vhd. Let's copy this file to another path:\
+  `[root@baras tmp]# ls /var/run/sr-mount/55654811-fa04-ba61-6c11-59116f85399f/a4bb1d38-5026-47ed-a400-b5fd205c5339.vhd`\
+  `/var/run/sr-mount/55654811-fa04-ba61-6c11-59116f85399f/a4bb1d38-5026-47ed-a400-b5fd205c5339.vhd`\
+  `[root@baras tmp]# cp /var/run/sr-mount/55654811-fa04-ba61-6c11-59116f85399f/a4bb1d38-5026-47ed-a400-b5fd205c5339.vhd ./`\
+  `[root@baras tmp]# xe vdi-destroy uuid=a4bb1d38-5026-47ed-a400-b5fd205c5339.vhd`
 
-* create image and import data to glance
+* Rename vhd file and create gzipped tarball
 
-  `glance image-create --name="Ubuntu-vivid-server-cloudimg-amd64" --is-public=true --container-format=ovf --disk-format=vhd --property vm_mode=hvm < vivid-server-cloudimg-amd64-disk1.tgz`
+  `[root@baras tmp]# mv a4bb1d38-5026-47ed-a400-b5fd205c5339.vhd 0.vhd`\
+  `[root@baras tmp]# tar -czf vivid-server-cloudimg-amd64-disk1.tgz 0.vhd`\
+
+* Create image and import data to glance
+
+  `glance image-create --name="Ubuntu-vivid-server-cloudimg-amd64" --is-public=true --container-format=ovf --disk-format=vhd --property vm_mode=hvm --file vivid-server-cloudimg-amd64-disk1.tgz`
 
 # Converting an existing QCOW2 image
 
@@ -45,29 +56,24 @@ For example, we download Fedora qcow2 formatted image. We can use the following 
 
 `qemu-img convert -O vpc Fedora-Cloud-Base-23-20151030.x86_64.qcow2 0.vhd`
 
-`tar -czf Fedora-Cloud-Base-23-20151030.x86_64.tgz 0.vhd`
+Then we can follow up the similar steps described in the section of "Generate Images from VHD images" to create OpenStack images from the above VHD file.
 
-`glance image-create --name="Fedora_23" --is-public=true --container-format=ovf --disk-format=vhd --property vm_mode=hvm < Fedora-Cloud-Base-23-20151030.x86_64.tgz`
-
-At here I only take QCOW2 as the example, logically with the similar procedure we can create XenServer Images from any other images format as long as the images can be converted to VHD.
+Here, I only take QCOW2 as the example, logically we can create XenServer images from any other images format as long as the images can be converted to VHD.
 
 # Creating from an existing XenServer VM
 
-If we have an existing VM running on XenServer, it's easy to create the image from this VM.
+If we have an existing VM running on XenServer, it's easy to create the image from this VM. But please ensure you have cloud-init installed and configured correctly as OpenStack depends on cloud-init to initialize VMs at first boot.
 
 1. shutdown the VM
 
 2. get VM's VDI and export it as VHD file. Usually that’s the first disk of the VM, so at here I use “device=xvda” to ensure only the first VBD is listed. If that’s not the first one, please identify it by yourself and specify the correct device.
 
-   `vbd_uuid=$(xe vbd-list vm-name-label=<vm-name> device=xvda minimal=true)`
-
+   `vbd_uuid=$(xe vbd-list vm-name-label=${vm-name} device=xvda minimal=true)`\
    `vdi_uuid=$(xe vdi-list vbd-uuids=${vbd_uuid} minimal=true)`
 
-   `xe vdi-export format=vhd filename=0.vhd uuid=${vdi_uuid}`
+3. Using the vdi_uuid to find the VHD file under the SR mount path, in case this is an EXT SR; otherwise you should export this VDI to file system and then follow the steps in the section of "Generate Images from VHD images" to import this VHD to an EXT SR's VDI and take that VDI's VHD file directly.
 
-3. Once we exported this VHD file, we can follow the same way described in the first section to generate the image.
-
-   Note: There are also other ways to export the vhd file, e.g. copy vhd files directly from ext SR. But I strongly recommend to use vdi-export. It's a formal supported method by XenServer and it will generate compact VHD file with less file size (removed the zero contents from the VHD file).
+4. Once we get the VHD file, we can follow the same way described in the section of "Generate Images from VHD images" to generate the OpenStack image.
 
 # Creating a Windows image
 
